@@ -9,9 +9,21 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@aztec/accounts": "^4.0.0-devnet.2-patch.3",
+    "@aztec/aztec.js": "^4.0.0-devnet.2-patch.3",
+    "@aztec/ethereum": "^4.0.0-devnet.2-patch.3",
+    "@aztec/foundation": "^4.0.0-devnet.2-patch.3",
+    "@aztec/kv-store": "^4.0.0-devnet.2-patch.3",
+    "@aztec/l1-artifacts": "^4.0.0-devnet.2-patch.3",
+    "@aztec/noir-contracts.js": "^4.0.0-devnet.2-patch.3",
+    "@aztec/pxe": "^4.0.0-devnet.2-patch.3",
+    "@aztec/stdlib": "^4.0.0-devnet.2-patch.3",
+    "@aztec/wallets": "^4.0.0-devnet.2-patch.3",
+    "async-mutex": "^0.5.0",
     "next": "16.1.6",
     "react": "19.2.3",
-    "react-dom": "19.2.3"
+    "react-dom": "19.2.3",
+    "viem": "^2.46.3"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
