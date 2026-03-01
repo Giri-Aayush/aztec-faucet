@@ -7,6 +7,7 @@ function buildSdkSnippet(claimData: {
   messageLeafIndex: string;
 }): string {
   return `import { FeeJuicePaymentMethodWithClaim } from "@aztec/aztec.js/fee";
+import { FeeJuiceContract } from "@aztec/aztec.js/protocol";
 import { Fr } from "@aztec/aztec.js/fields";
 
 const claim = {
@@ -15,11 +16,15 @@ const claim = {
   messageLeafIndex: ${claimData.messageLeafIndex}n,
 };
 
-// Use when deploying your account:
-const paymentMethod = new FeeJuicePaymentMethodWithClaim(
-  accountAddress, claim
-);
-await deployMethod.send({ fee: { paymentMethod } });`;
+// Option 1: Account NOT yet deployed — deploy + claim in one tx
+const paymentMethod = new FeeJuicePaymentMethodWithClaim(accountAddress, claim);
+await deployMethod.send({ fee: { paymentMethod } });
+
+// Option 2: Account ALREADY deployed — claim directly
+const feeJuice = FeeJuiceContract.at(wallet);
+await feeJuice.methods
+  .claim(accountAddress, claim.claimAmount, claim.claimSecret, new Fr(claim.messageLeafIndex))
+  .send({ from: accountAddress, fee: { gasSettings } });`;
 }
 
 export async function GET(

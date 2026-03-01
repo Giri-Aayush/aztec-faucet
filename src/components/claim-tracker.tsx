@@ -169,8 +169,8 @@ export function ClaimTracker({
         </p>
         <p className="mt-1 text-xs text-emerald-400/70">
           The L1→L2 bridge message has been included on L2. Use the data below
-          with <code className="rounded bg-zinc-800 px-1">FeeJuicePaymentMethodWithClaim</code> to
-          claim your Fee Juice.
+          to claim your Fee Juice. See the SDK snippet for both new account
+          deployment and existing account usage.
         </p>
       </div>
 
@@ -190,8 +190,30 @@ export function ClaimTracker({
         </div>
       )}
 
-      {sdkSnippet && (
+      {claimData && (
         <details open>
+          <summary className="cursor-pointer text-xs text-purple-400 hover:text-purple-300">
+            CLI command
+          </summary>
+          <div className="mt-2 rounded-md border border-zinc-700 bg-zinc-800 p-3">
+            <div className="overflow-x-auto">
+              <pre className="text-xs text-zinc-300">{`node scripts/claim-fee-juice.mjs \\
+  --secret <your-account-secret> \\
+  --claim-amount ${claimData.claimAmount} \\
+  --claim-secret ${claimData.claimSecretHex} \\
+  --message-leaf-index ${claimData.messageLeafIndex}`}</pre>
+            </div>
+            <div className="mt-2 flex justify-end">
+              <CopyButton
+                text={`node scripts/claim-fee-juice.mjs \\\n  --secret <your-account-secret> \\\n  --claim-amount ${claimData.claimAmount} \\\n  --claim-secret ${claimData.claimSecretHex} \\\n  --message-leaf-index ${claimData.messageLeafIndex}`}
+              />
+            </div>
+          </div>
+        </details>
+      )}
+
+      {sdkSnippet && (
+        <details>
           <summary className="cursor-pointer text-xs text-purple-400 hover:text-purple-300">
             SDK code snippet
           </summary>
