@@ -19,13 +19,20 @@ import { createAztecNodeClient } from "@aztec/aztec.js/node";
 import { FeeJuicePaymentMethodWithClaim } from "@aztec/aztec.js/fee";
 import { GasSettings } from "@aztec/stdlib/gas";
 
+// Suppress all SDK logs — only our own output is shown
+process.env.LOG_LEVEL = process.env.LOG_LEVEL || "silent";
+
 const { EmbeddedWallet } = await import("@aztec/wallets/embedded");
 
-// Parse CLI args
 function getArg(name) {
   const idx = process.argv.indexOf(`--${name}`);
   if (idx === -1 || idx + 1 >= process.argv.length) return undefined;
   return process.argv[idx + 1];
+}
+
+function die(msg) {
+  console.error(`\n  Error: ${msg}\n`);
+  process.exit(1);
 }
 
 const accountSecret = getArg("secret");
@@ -34,25 +41,31 @@ const claimSecretStr = getArg("claim-secret");
 const messageLeafIndexStr = getArg("message-leaf-index");
 
 if (!accountSecret || !claimAmountStr || !claimSecretStr || !messageLeafIndexStr) {
-  console.error("Usage: node scripts/claim-fee-juice.mjs \\");
-  console.error("  --secret <account-secret-key> \\");
-  console.error("  --claim-amount <amount> \\");
-  console.error("  --claim-secret <secret-from-bridge> \\");
-  console.error("  --message-leaf-index <index>");
-  console.error("\nAll arguments are required. These values come from the faucet's Fee Juice drip response.");
+  console.log(`
+  Usage: node scripts/claim-fee-juice.mjs \\
+    --secret <account-secret-key> \\
+    --claim-amount <amount> \\
+    --claim-secret <secret-from-bridge> \\
+    --message-leaf-index <index>
+
+  All arguments are required. These values come from the faucet's Fee Juice drip response.
+`);
   process.exit(1);
 }
 
 const nodeUrl = process.env.AZTEC_NODE_URL || "https://v4-devnet-2.aztec-labs.com/";
 
-console.log("=== Fee Juice Claim ===\n");
-console.log("Node URL:", nodeUrl);
-console.log("Claim Amount:", claimAmountStr);
-console.log("Message Leaf Index:", messageLeafIndexStr);
+console.log(`
+  Aztec Fee Juice Claim
+  ---------------------
+  Node:         ${nodeUrl}
+  Claim Amount: ${claimAmountStr}
+  Leaf Index:   ${messageLeafIndexStr}
+`);
 
 try {
-  // Step 1: Create wallet and recreate the account
-  console.log("\n[1/3] Creating embedded wallet and account (with prover)...");
+  // Step 1: Create wallet and derive account
+  process.stdout.write("  [1/3] Initializing wallet and account...");
   const wallet = await EmbeddedWallet.create(nodeUrl, {
     ephemeral: true,
     pxeConfig: { proverEnabled: true },
@@ -60,14 +73,16 @@ try {
   const secretKey = Fr.fromHexString(accountSecret);
   const accountManager = await wallet.createSchnorrAccount(secretKey, Fr.ZERO);
   const address = accountManager.address;
-  console.log("Account address:", address.toString());
+  console.log(" done");
+  console.log(`        Address: ${address.toString()}`);
 
-  // Step 2: Check if account is already deployed
-  console.log("\n[2/3] Checking account status...");
+  // Step 2: Check deployment status
+  process.stdout.write("  [2/3] Checking account status...");
   const metadata = await wallet.getContractMetadata(address);
   const isDeployed = metadata.isContractInitialized;
-  console.log("Account deployed:", isDeployed ? "Yes" : "No");
+  console.log(isDeployed ? " deployed" : " not deployed");
 
+  // Prepare claim and gas settings
   const claim = {
     claimAmount: BigInt(claimAmountStr),
     claimSecret: Fr.fromHexString(claimSecretStr),
@@ -80,60 +95,66 @@ try {
   const gasSettings = GasSettings.default({ maxFeesPerGas });
 
   if (!isDeployed) {
-    // Account not deployed — deploy + claim in one tx
-    console.log("\n[3/3] Deploying account with Fee Juice claim...");
+    // Deploy + claim in one tx
+    process.stdout.write("  [3/3] Deploying account + claiming Fee Juice (proving ~10s)...");
     const paymentMethod = new FeeJuicePaymentMethodWithClaim(address, claim);
     const deployMethod = await accountManager.getDeployMethod();
 
-    // DeployMethod.send() with wait: { returnReceipt: true } returns
-    // { txHash, status, blockNumber, transactionFee, contract, instance }
-    console.log("Sending deploy + claim transaction (proof generation may take ~10s)...");
     const result = await deployMethod.send({
       from: AztecAddress.ZERO,
       fee: { gasSettings, paymentMethod },
       wait: { returnReceipt: true },
     });
 
-    console.log("\nTransaction mined!");
-    console.log("Hash:", result.txHash?.toString());
-    console.log("Status:", result.status);
-    console.log("Block:", result.blockNumber);
-    console.log("Fee:", result.transactionFee?.toString());
-    console.log("\n=== Success! ===");
-    console.log("Account deployed at:", address.toString());
-    console.log("Fee Juice claimed:", claimAmountStr);
+    console.log(" done\n");
+    console.log("  Result");
+    console.log("  ------");
+    console.log(`  Tx Hash: ${result.txHash?.toString() ?? "n/a"}`);
+    console.log(`  Status:  ${result.status ?? "unknown"}`);
+    console.log(`  Block:   ${result.blockNumber ?? "n/a"}`);
+    console.log(`  Fee:     ${result.transactionFee?.toString() ?? "n/a"}`);
+    console.log(`\n  Account deployed and Fee Juice claimed successfully.`);
   } else {
-    // Account already deployed — call claim() directly on the FeeJuice contract
-    console.log("\n[3/3] Claiming Fee Juice on already-deployed account...");
-
+    // Claim directly on already-deployed account
+    process.stdout.write("  [3/3] Claiming Fee Juice (proving ~10s)...");
     const { FeeJuiceContract } = await import("@aztec/aztec.js/protocol");
 
-    // FeeJuiceContract.at() from @aztec/aztec.js/protocol takes only the wallet —
-    // the FeeJuice protocol contract address is hardcoded in the constructor.
+    // FeeJuiceContract.at() takes only the wallet — protocol address is hardcoded
     const feeJuice = FeeJuiceContract.at(wallet);
-
-    // BaseContractInteraction.send() calls wallet.sendTx() which already waits
-    // for the tx to be mined and returns the receipt directly.
-    console.log("Sending claim transaction (proof generation may take ~10s)...");
     const receipt = await feeJuice.methods
       .claim(address, claim.claimAmount, claim.claimSecret, new Fr(claim.messageLeafIndex))
       .send({ from: address, fee: { gasSettings } });
 
-    console.log("\nTransaction mined!");
-    console.log("Hash:", receipt.txHash?.toString());
-    console.log("Status:", receipt.status);
-    console.log("Block:", receipt.blockNumber);
-    console.log("Fee:", receipt.transactionFee?.toString());
-    console.log("\n=== Success! ===");
-    console.log("Fee Juice claimed:", claimAmountStr);
+    console.log(" done\n");
+    console.log("  Result");
+    console.log("  ------");
+    console.log(`  Tx Hash: ${receipt.txHash?.toString() ?? "n/a"}`);
+    console.log(`  Status:  ${receipt.status ?? "unknown"}`);
+    console.log(`  Block:   ${receipt.blockNumber ?? "n/a"}`);
+    console.log(`  Fee:     ${receipt.transactionFee?.toString() ?? "n/a"}`);
+    console.log(`\n  Fee Juice claimed successfully.`);
   }
 
-  console.log("\nThe account now has Fee Juice to pay for L2 transactions.");
-  console.log("Check balance: node scripts/check-fee-juice-balance.mjs --address", address.toString());
+  console.log(`\n  Check balance:\n    node scripts/check-fee-juice-balance.mjs --address ${address.toString()}\n`);
+
+  await wallet.stop();
+  process.exit(0);
 } catch (err) {
-  console.error("\nFailed:", err.message);
-  if (err.stack) {
-    console.error("\nStack:", err.stack);
+  console.log(" failed\n");
+
+  const msg = err.message || String(err);
+
+  if (msg.includes("No non-nullified L1 to L2 message")) {
+    die("This claim has already been consumed or the L1→L2 message has not arrived yet.\n         If you just bridged, wait ~2 minutes and try again.\n         If you already claimed, request new Fee Juice from the faucet.");
   }
-  process.exit(1);
+
+  if (msg.includes("Balance too low")) {
+    die("Insufficient Fee Juice balance to pay for this transaction's gas.");
+  }
+
+  if (msg.includes("ECONNREFUSED") || msg.includes("fetch failed")) {
+    die(`Cannot connect to Aztec node at ${nodeUrl}.\n         Check AZTEC_NODE_URL or ensure the node is running.`);
+  }
+
+  die(msg);
 }
