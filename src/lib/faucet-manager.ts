@@ -2,6 +2,7 @@ import { type Hex, formatEther, isAddress } from "viem";
 import { L1Faucet } from "./l1-faucet";
 import { L2Faucet, type FeeJuiceClaimData } from "./l2-faucet";
 import { Throttle, ThrottleError } from "./throttle";
+import { ClaimStore, type StoredClaim } from "./claim-store";
 
 export type Asset = "eth" | "fee-juice" | "test-token";
 
@@ -17,6 +18,8 @@ export type DripResult = {
   asset: Asset;
   txHash?: string;
   claimData?: FeeJuiceClaimData;
+  claimId?: string;
+  claimStatus?: "bridging" | "ready" | "expired";
 };
 
 export type FaucetStatus = {
@@ -37,11 +40,14 @@ export class FaucetManager {
   private l1Faucet: L1Faucet;
   private l2Faucet: L2Faucet;
   private throttle: Throttle;
+  private ipThrottle: Throttle;
+  private claimStore: ClaimStore;
 
   private constructor() {
     const l1PrivateKey = requireEnv("FAUCET_PRIVATE_KEY") as Hex;
     const l1RpcUrl = requireEnv("L1_RPC_URL");
     const l1ChainId = parseIntEnv("L1_CHAIN_ID", 11155111);
+    const aztecNodeUrl = requireEnv("AZTEC_NODE_URL");
 
     this.l1Faucet = new L1Faucet({
       rpcUrl: l1RpcUrl,
@@ -51,7 +57,7 @@ export class FaucetManager {
     });
 
     this.l2Faucet = new L2Faucet({
-      aztecNodeUrl: requireEnv("AZTEC_NODE_URL"),
+      aztecNodeUrl,
       l1RpcUrl,
       l1ChainId,
       l1PrivateKey,
@@ -68,6 +74,11 @@ export class FaucetManager {
 
     const intervalMs = parseIntEnv("DRIP_INTERVAL_MS", 3600000);
     this.throttle = new Throttle(intervalMs);
+
+    const ipIntervalMs = parseIntEnv("IP_DRIP_INTERVAL_MS", intervalMs);
+    this.ipThrottle = new Throttle(ipIntervalMs);
+
+    this.claimStore = new ClaimStore(aztecNodeUrl);
   }
 
   static getInstance(): FaucetManager {
@@ -77,12 +88,13 @@ export class FaucetManager {
     return instance;
   }
 
-  async drip(address: string, asset: Asset): Promise<DripResult> {
+  async drip(address: string, asset: Asset, ip?: string): Promise<DripResult> {
     const trimmed = address.trim();
     this.validateAddress(trimmed, asset);
 
     const normalizedAddress = trimmed.toLowerCase();
     this.throttle.check(normalizedAddress, asset);
+    if (ip) this.ipThrottle.check(ip, asset);
 
     let result: DripResult;
 
@@ -94,7 +106,13 @@ export class FaucetManager {
       }
       case "fee-juice": {
         const claimData = await this.l2Faucet.bridgeFeeJuice(trimmed);
-        result = { success: true, asset, claimData };
+        const claimId = this.claimStore.add(trimmed, claimData);
+        result = {
+          success: true,
+          asset,
+          claimId,
+          claimStatus: "bridging",
+        };
         break;
       }
       case "test-token": {
@@ -109,7 +127,12 @@ export class FaucetManager {
     }
 
     this.throttle.record(normalizedAddress, asset);
+    if (ip) this.ipThrottle.record(ip, asset);
     return result;
+  }
+
+  getClaim(id: string): StoredClaim | undefined {
+    return this.claimStore.get(id);
   }
 
   private validateAddress(address: string, asset: Asset): void {

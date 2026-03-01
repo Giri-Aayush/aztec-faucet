@@ -48,9 +48,14 @@ export async function POST(request: Request) {
       );
     }
 
+    // Extract client IP for rate limiting
+    const forwarded = request.headers.get("x-forwarded-for");
+    const realIp = request.headers.get("x-real-ip");
+    const ip = forwarded?.split(",")[0]?.trim() || realIp || undefined;
+
     // Execute drip
     const manager = FaucetManager.getInstance();
-    const result = await manager.drip(address, asset as Asset);
+    const result = await manager.drip(address, asset as Asset, ip);
 
     return NextResponse.json(result);
   } catch (err) {

@@ -31,7 +31,7 @@ function formatMs(ms: number): string {
   return `${hours}h ${remaining}m`;
 }
 
-function CopyButton({ text }: { text: string }) {
+export function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
 
   const copy = useCallback(async () => {
@@ -66,7 +66,7 @@ function CopyButton({ text }: { text: string }) {
   );
 }
 
-function DataField({ label, value }: { label: string; value: string }) {
+export function DataField({ label, value }: { label: string; value: string }) {
   return (
     <div>
       <div className="flex items-center justify-between">

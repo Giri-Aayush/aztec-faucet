@@ -43,6 +43,9 @@ yarn-error.log*
 # claude code
 .claude/
 
+# aztec docs research
+aztec-packages/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

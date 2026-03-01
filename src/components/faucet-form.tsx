@@ -3,6 +3,7 @@
 import { useState, useCallback } from "react";
 import { TurnstileWidget } from "./turnstile-widget";
 import { DripResult, type DripResultData } from "./drip-result";
+import { ClaimTracker } from "./claim-tracker";
 
 type Asset = "eth" | "fee-juice" | "test-token";
 
@@ -48,6 +49,7 @@ export function FaucetForm() {
   const [result, setResult] = useState<DripResultData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [retryAfter, setRetryAfter] = useState<number | null>(null);
+  const [claimId, setClaimId] = useState<string | null>(null);
 
   const currentAsset = ASSETS.find((a) => a.value === asset)!;
   const isEthAddress = currentAsset.addressType === "ethereum";
@@ -123,7 +125,11 @@ export function FaucetForm() {
         return;
       }
 
-      setResult(data);
+      if (data.claimId) {
+        setClaimId(data.claimId);
+      } else {
+        setResult(data);
+      }
     } catch (err) {
       if (err instanceof DOMException && err.name === "AbortError") {
         setError("Request timed out. The server may be busy — please try again.");
@@ -246,7 +252,18 @@ export function FaucetForm() {
       </button>
 
       {/* Result display */}
-      <DripResult result={result} error={error} retryAfter={retryAfter} />
+      {claimId ? (
+        <ClaimTracker
+          claimId={claimId}
+          onReset={() => {
+            setClaimId(null);
+            setResult(null);
+            setError(null);
+          }}
+        />
+      ) : (
+        <DripResult result={result} error={error} retryAfter={retryAfter} />
+      )}
     </form>
   );
 }
