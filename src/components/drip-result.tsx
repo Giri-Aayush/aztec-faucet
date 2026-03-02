@@ -2,51 +2,59 @@
 
 import { useState, useCallback } from "react";
 
-export function makeClaimCmd(claimAmount: string, claimSecretHex: string, messageLeafIndex: string): string {
-  return `cd ~/.aztec-devtools && \\
-npm install --no-package-lock @aztec/wallets@devnet @aztec/aztec.js@devnet && \\
-node --input-type=module << 'AZTEC_EOF'
-process.env.LOG_LEVEL = "silent";
-import { Fr } from "@aztec/aztec.js/fields";
-import { AztecAddress } from "@aztec/aztec.js/addresses";
-import { FeeJuicePaymentMethodWithClaim } from "@aztec/aztec.js/fee";
-const { EmbeddedWallet } = await import("@aztec/wallets/embedded");
+const GITHUB_REPO = "https://github.com/Giri-Aayush/aztec-faucet";
+const GITHUB_RAW = "https://raw.githubusercontent.com/Giri-Aayush/aztec-faucet/main";
 
-const SECRET = "<YOUR_SECRET_KEY>"; // replace with your key from the create-account step
-const nodeUrl = "https://v4-devnet-2.aztec-labs.com/";
-process.stdout.write("Connecting to Aztec devnet... ");
-const w = await EmbeddedWallet.create(nodeUrl, { ephemeral: true, pxeConfig: { proverEnabled: true } });
-console.log("done");
-const mgr = await w.createSchnorrAccount(Fr.fromHexString(SECRET), Fr.ZERO);
-const addr = mgr.address;
-process.stdout.write("Checking account status... ");
-const meta = await w.getContractMetadata(addr);
-console.log(meta.isContractInitialized ? "deployed" : "not yet deployed");
-const claim = {
-  claimAmount: ${claimAmount}n,
-  claimSecret: Fr.fromHexString("${claimSecretHex}"),
-  messageLeafIndex: ${messageLeafIndex}n,
-};
-if (!meta.isContractInitialized) {
-  console.log("Deploying account + claiming Fee Juice atomically (proving ~30s)...");
-  const pm = new FeeJuicePaymentMethodWithClaim(addr, claim);
-  const dm = await mgr.getDeployMethod();
-  const r = await dm.send({ from: AztecAddress.ZERO, fee: { paymentMethod: pm }, wait: { returnReceipt: true } });
-  console.log("Done! Tx:", r.txHash?.toString());
-} else {
-  console.log("Account already deployed — claiming Fee Juice (proving ~30s)...");
-  const wallet = await mgr.getWallet();
-  const pm = new FeeJuicePaymentMethodWithClaim(addr, claim);
-  const r = await wallet.sendTransaction({
-    calls: [],
-    fee: { paymentMethod: pm },
-    wait: { returnReceipt: true },
-  });
-  console.log("Done! Tx:", r.txHash?.toString());
+export function makeClaimOneLiner(claimAmount: string, claimSecretHex: string, messageLeafIndex: string): string {
+  return `curl -fsSL ${GITHUB_RAW}/sh/claim.sh | sh -s -- \\
+  --secret <YOUR_SECRET_KEY> \\
+  --claim-amount ${claimAmount} \\
+  --claim-secret ${claimSecretHex} \\
+  --message-leaf-index ${messageLeafIndex}`;
 }
-await w.stop();
-process.exit(0);
-AZTEC_EOF`;
+
+export function makeClaimCLI(claimAmount: string, claimSecretHex: string, messageLeafIndex: string): string {
+  return `git clone ${GITHUB_REPO}
+cd aztec-faucet && npm install
+node scripts/claim-fee-juice.mjs \\
+  --secret <YOUR_SECRET_KEY> \\
+  --claim-amount ${claimAmount} \\
+  --claim-secret ${claimSecretHex} \\
+  --message-leaf-index ${messageLeafIndex}`;
+}
+
+export function ClaimCommands({ claimAmount, claimSecretHex, messageLeafIndex }: {
+  claimAmount: string;
+  claimSecretHex: string;
+  messageLeafIndex: string;
+}) {
+  const oneLiner = makeClaimOneLiner(claimAmount, claimSecretHex, messageLeafIndex);
+  const cli = makeClaimCLI(claimAmount, claimSecretHex, messageLeafIndex);
+  return (
+    <div className="space-y-2">
+      <div className="rounded-xl border border-white/6 bg-white/2">
+        <div className="flex items-center justify-between border-b border-white/5 px-3 py-2">
+          <span className="text-[10px] font-medium uppercase tracking-wider text-zinc-600">quick start — curl, no clone</span>
+          <CopyButton text={oneLiner} />
+        </div>
+        <pre className="overflow-x-auto px-3 py-3 text-[11px] leading-relaxed text-zinc-400">
+          <code>{oneLiner}</code>
+        </pre>
+      </div>
+      <div className="rounded-xl border border-white/6 bg-white/2">
+        <div className="flex items-center justify-between border-b border-white/5 px-3 py-2">
+          <span className="text-[10px] font-medium uppercase tracking-wider text-zinc-600">full cli — clone the repo</span>
+          <CopyButton text={cli} />
+        </div>
+        <pre className="overflow-x-auto px-3 py-3 text-[11px] leading-relaxed text-zinc-400">
+          <code>{cli}</code>
+        </pre>
+      </div>
+      <p className="text-[11px] text-zinc-600">
+        Replace <code className="rounded bg-white/6 px-1 text-zinc-500">&lt;YOUR_SECRET_KEY&gt;</code> with your account secret from the create-account step. All other values are pre-filled.
+      </p>
+    </div>
+  );
 }
 
 type ClaimData = {
@@ -137,7 +145,6 @@ export function DataField({ label, value }: { label: string; value: string }) {
 const ASSET_LABELS: Record<string, string> = {
   eth: "L1 ETH",
   "fee-juice": "Fee Juice",
-  "test-token": "Test Token",
 };
 
 const SEPOLIA_ETHERSCAN = "https://sepolia.etherscan.io/tx";
@@ -234,62 +241,6 @@ function EthResult({ txHash, onReset }: { txHash: string; onReset?: () => void }
   );
 }
 
-function TestTokenResult({ txHash, onReset }: { txHash?: string; onReset?: () => void }) {
-  return (
-    <div className="flex h-full flex-col justify-between gap-5">
-      <div className="space-y-5">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="flex h-7 w-7 items-center justify-center rounded-full border border-aqua/30 bg-aqua/10">
-              <svg viewBox="0 0 14 14" fill="none" className="h-3.5 w-3.5 text-aqua">
-                <path d="M2.5 7.5L5.5 10.5L11.5 4" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </div>
-            <span className="text-sm font-semibold text-white">Test Token Minted</span>
-          </div>
-          <span className="rounded-full border border-aqua/20 bg-aqua/8 px-2.5 py-0.5 text-[10px] font-medium uppercase tracking-widest text-aqua">
-            Confirmed
-          </span>
-        </div>
-
-        <div className="flex items-center gap-2 rounded-lg border border-white/5 bg-white/2 px-3 py-2">
-          <span className="relative flex h-1.5 w-1.5">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-orchid/60" style={{ animationDuration: "2.5s" }} />
-            <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-orchid" />
-          </span>
-          <span className="text-xs text-zinc-400">Aztec L2 Devnet</span>
-          <span className="ml-auto text-xs text-zinc-600">Public balance</span>
-        </div>
-
-        {txHash && (
-          <div>
-            <div className="mb-1.5 flex items-center justify-between">
-              <p className="text-[11px] font-medium uppercase tracking-wider text-zinc-500">
-                Transaction Hash
-              </p>
-              <CopyButton text={txHash} />
-            </div>
-            <div className="rounded-xl border border-white/6 bg-white/2 px-3 py-2.5">
-              <code className="block font-mono text-sm text-zinc-200">
-                {truncateHash(txHash)}
-              </code>
-              <details className="mt-1.5">
-                <summary className="cursor-pointer select-none text-[10px] text-zinc-600 transition-colors hover:text-zinc-400">
-                  Show full hash
-                </summary>
-                <code className="mt-1.5 block break-all text-[11px] leading-relaxed text-zinc-500">
-                  {txHash}
-                </code>
-              </details>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {onReset && <ResetButton onReset={onReset} />}
-    </div>
-  );
-}
 
 export function DripResult({ result, error, retryAfter, onReset }: DripResultProps) {
   if (error) {
@@ -309,10 +260,6 @@ export function DripResult({ result, error, retryAfter, onReset }: DripResultPro
 
   if (result.asset === "eth" && result.txHash) {
     return <EthResult txHash={result.txHash} onReset={onReset} />;
-  }
-
-  if (result.asset === "test-token") {
-    return <TestTokenResult txHash={result.txHash} onReset={onReset} />;
   }
 
   // fee-juice fallback
@@ -347,19 +294,11 @@ export function DripResult({ result, error, retryAfter, onReset }: DripResultPro
             <DataField label="Message Hash" value={result.claimData.messageHashHex} />
             <DataField label="Message Leaf Index" value={result.claimData.messageLeafIndex} />
 
-            {/* Single paste-and-run claim command */}
-            <div className="rounded-xl border border-white/6 bg-white/2">
-              <div className="flex items-center justify-between border-b border-white/5 px-3 py-2">
-                <span className="text-[10px] font-medium uppercase tracking-wider text-zinc-600">terminal — paste and run</span>
-                <CopyButton text={makeClaimCmd(result.claimData.claimAmount, result.claimData.claimSecretHex, result.claimData.messageLeafIndex)} />
-              </div>
-              <pre className="overflow-x-auto px-3 py-3 text-[11px] leading-relaxed text-zinc-400">
-                <code>{makeClaimCmd(result.claimData.claimAmount, result.claimData.claimSecretHex, result.claimData.messageLeafIndex)}</code>
-              </pre>
-            </div>
-            <p className="text-[11px] text-zinc-600">
-              Replace <code className="rounded bg-white/6 px-1 text-zinc-500">&lt;YOUR_SECRET_KEY&gt;</code> with the secret from the create-account step. Claim data is pre-filled.
-            </p>
+            <ClaimCommands
+              claimAmount={result.claimData.claimAmount}
+              claimSecretHex={result.claimData.claimSecretHex}
+              messageLeafIndex={result.claimData.messageLeafIndex}
+            />
           </div>
         )}
       </div>

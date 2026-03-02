@@ -5,25 +5,15 @@ import { TurnstileWidget } from "./turnstile-widget";
 import { CopyButton } from "./drip-result";
 import type { DripResultData } from "./drip-result";
 
-const CREATE_ACCOUNT_CMD = `mkdir -p ~/.aztec-devtools && \\
-cd ~/.aztec-devtools && \\
-echo '{"type":"module"}' > package.json && \\
-npm install --no-package-lock @aztec/wallets@devnet @aztec/aztec.js@devnet && \\
-node --input-type=module << 'AZTEC_EOF'
-process.env.LOG_LEVEL = "silent";
-const { EmbeddedWallet } = await import("@aztec/wallets/embedded");
-const { Fr } = await import("@aztec/aztec.js/fields");
-process.stdout.write("Connecting to Aztec devnet... ");
-const w = await EmbeddedWallet.create("https://v4-devnet-2.aztec-labs.com/", { ephemeral: true });
-console.log("done");
-const sk = Fr.random(), a = await w.createSchnorrAccount(sk, Fr.ZERO);
-console.log("\\nSecret Key (KEEP PRIVATE):", sk.toString());
-console.log("Address (paste into faucet):", a.address.toString(), "\\n");
-await w.stop();
-process.exit(0);
-AZTEC_EOF`;
+const GITHUB_RAW = "https://raw.githubusercontent.com/Giri-Aayush/aztec-faucet/main";
+const GITHUB_REPO = "https://github.com/Giri-Aayush/aztec-faucet";
 
-type Asset = "eth" | "fee-juice" | "test-token";
+const CREATE_ACCOUNT_ONELINER = `curl -fsSL ${GITHUB_RAW}/sh/create-account.sh | sh`;
+const CREATE_ACCOUNT_CLI = `git clone ${GITHUB_REPO}
+cd aztec-faucet && npm install
+node scripts/create-aztec-account.mjs`;
+
+type Asset = "eth" | "fee-juice";
 
 const ASSETS: {
   value: Asset;
@@ -41,12 +31,6 @@ const ASSETS: {
     value: "fee-juice",
     label: "Fee Juice",
     description: "L2 gas token (bridged from L1)",
-    addressType: "aztec",
-  },
-  {
-    value: "test-token",
-    label: "Test Token",
-    description: "L2 test ERC20 token",
     addressType: "aztec",
   },
 ];
@@ -222,17 +206,26 @@ export function FaucetForm({
             <summary className="cursor-pointer px-4 py-3 text-xs font-medium text-zinc-500 transition-colors hover:text-zinc-300">
               Don&apos;t have an Aztec address yet?
             </summary>
-            <div className="border-t border-white/6 px-4 pb-4 pt-3 space-y-3">
+            <div className="border-t border-white/6 px-4 pb-4 pt-3 space-y-2">
               <p className="text-xs text-zinc-500">
-                Paste this into your terminal. It installs the deps and prints your address — nothing leaves your machine.
+                Prints your secret key and address — nothing leaves your machine.
               </p>
               <div className="rounded-lg border border-white/5 bg-black/30">
                 <div className="flex items-center justify-between border-b border-white/5 px-3 py-2">
-                  <span className="text-[10px] font-medium uppercase tracking-wider text-zinc-600">terminal</span>
-                  <CopyButton text={CREATE_ACCOUNT_CMD} />
+                  <span className="text-[10px] font-medium uppercase tracking-wider text-zinc-600">quick start — curl, no clone</span>
+                  <CopyButton text={CREATE_ACCOUNT_ONELINER} />
                 </div>
                 <pre className="overflow-x-auto px-3 py-3 text-[11px] leading-relaxed text-zinc-400">
-                  <code>{CREATE_ACCOUNT_CMD}</code>
+                  <code>{CREATE_ACCOUNT_ONELINER}</code>
+                </pre>
+              </div>
+              <div className="rounded-lg border border-white/5 bg-black/30">
+                <div className="flex items-center justify-between border-b border-white/5 px-3 py-2">
+                  <span className="text-[10px] font-medium uppercase tracking-wider text-zinc-600">full cli — clone the repo</span>
+                  <CopyButton text={CREATE_ACCOUNT_CLI} />
+                </div>
+                <pre className="overflow-x-auto px-3 py-3 text-[11px] leading-relaxed text-zinc-400">
+                  <code>{CREATE_ACCOUNT_CLI}</code>
                 </pre>
               </div>
             </div>
@@ -320,9 +313,7 @@ export function FaucetForm({
             </svg>
             {asset === "fee-juice"
               ? "Bridging Fee Juice..."
-              : asset === "test-token"
-                ? "Minting tokens..."
-                : "Sending ETH..."}
+              : "Sending ETH..."}
           </span>
         ) : (
           `Request ${currentAsset.label}`

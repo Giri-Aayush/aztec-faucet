@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { CopyButton, DataField, makeClaimCmd } from "./drip-result";
+import { CopyButton, DataField, ClaimCommands } from "./drip-result";
 
 type ClaimStatus = "bridging" | "ready" | "expired";
 
@@ -153,18 +153,11 @@ export function ClaimTracker({
                   <DataField label="Message Hash" value={claimData.messageHashHex} />
                 </div>
               </details>
-              <div className="rounded-xl border border-white/6 bg-white/2">
-                <div className="flex items-center justify-between border-b border-white/5 px-3 py-2">
-                  <span className="text-[10px] font-medium uppercase tracking-wider text-zinc-600">terminal — paste and run</span>
-                  <CopyButton text={makeClaimCmd(claimData.claimAmount, claimData.claimSecretHex, claimData.messageLeafIndex)} />
-                </div>
-                <pre className="overflow-x-auto px-3 py-3 text-[11px] leading-relaxed text-zinc-400">
-                  <code>{makeClaimCmd(claimData.claimAmount, claimData.claimSecretHex, claimData.messageLeafIndex)}</code>
-                </pre>
-              </div>
-              <p className="text-[11px] text-zinc-600">
-                Replace <code className="rounded bg-white/6 px-1 text-zinc-500">&lt;YOUR_SECRET_KEY&gt;</code> with the secret from the create-account step.
-              </p>
+              <ClaimCommands
+                claimAmount={claimData.claimAmount}
+                claimSecretHex={claimData.claimSecretHex}
+                messageLeafIndex={claimData.messageLeafIndex}
+              />
             </div>
           )}
         </div>
@@ -273,22 +266,12 @@ export function ClaimTracker({
           </div>
         )}
 
-        {/* Paste-and-run terminal command */}
         {claimData && (
-          <div className="rounded-xl border border-white/6 bg-white/2">
-            <div className="flex items-center justify-between border-b border-white/5 px-3 py-2">
-              <span className="text-[10px] font-medium uppercase tracking-wider text-zinc-600">terminal — paste and run</span>
-              <CopyButton text={makeClaimCmd(claimData.claimAmount, claimData.claimSecretHex, claimData.messageLeafIndex)} />
-            </div>
-            <pre className="overflow-x-auto px-3 py-3 text-[11px] leading-relaxed text-zinc-400">
-              <code>{makeClaimCmd(claimData.claimAmount, claimData.claimSecretHex, claimData.messageLeafIndex)}</code>
-            </pre>
-          </div>
-        )}
-        {claimData && (
-          <p className="text-[11px] text-zinc-600">
-            Replace <code className="rounded bg-white/6 px-1 text-zinc-500">&lt;YOUR_SECRET_KEY&gt;</code> with the secret from the create-account step. Claim data is pre-filled.
-          </p>
+          <ClaimCommands
+            claimAmount={claimData.claimAmount}
+            claimSecretHex={claimData.claimSecretHex}
+            messageLeafIndex={claimData.messageLeafIndex}
+          />
         )}
       </div>
 
