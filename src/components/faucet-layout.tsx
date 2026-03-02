@@ -4,6 +4,7 @@ import { useState } from "react";
 import { FaucetForm } from "./faucet-form";
 import { DripResult, type DripResultData } from "./drip-result";
 import { ClaimTracker } from "./claim-tracker";
+import { ConfettiBurst } from "./confetti-burst";
 
 type InitialClaimData = {
   claimAmount: string;
@@ -146,11 +147,14 @@ export function FaucetLayout() {
                     onReset={handleReset}
                   />
                 ) : (
-                  <ClaimTracker
-                    claimId={rightPanel.claimId}
-                    initialClaimData={rightPanel.initialClaimData}
-                    onReset={handleReset}
-                  />
+                  <>
+                    <ConfettiBurst />
+                    <ClaimTracker
+                      claimId={rightPanel.claimId}
+                      initialClaimData={rightPanel.initialClaimData}
+                      onReset={handleReset}
+                    />
+                  </>
                 )}
               </div>
             </div>

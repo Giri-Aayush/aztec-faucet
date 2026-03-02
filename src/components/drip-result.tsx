@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import { ConfettiBurst } from "./confetti-burst";
 
 const GITHUB_REPO = "https://github.com/Giri-Aayush/aztec-faucet";
 const GITHUB_RAW = "https://raw.githubusercontent.com/Giri-Aayush/aztec-faucet/main";
@@ -204,6 +205,7 @@ function ResetButton({ onReset }: { onReset: () => void }) {
 function EthResult({ txHash, onReset }: { txHash: string; onReset?: () => void }) {
   return (
     <div className="flex h-full flex-col justify-between gap-5">
+      <ConfettiBurst />
       {/* Top section */}
       <div className="space-y-5">
         {/* Header row */}

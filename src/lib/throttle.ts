@@ -9,32 +9,44 @@ export class ThrottleError extends Error {
 }
 
 export class Throttle {
-  /** address → asset → last drip timestamp */
-  private history = new Map<string, Map<string, number>>();
+  /** key → asset → sorted list of drip timestamps within the window */
+  private history = new Map<string, Map<string, number[]>>();
 
   constructor(
     private intervalMs: number,
+    private maxCount: number = 1,
     private timeFn: () => number = Date.now,
   ) {}
 
-  check(address: string, asset: string): void {
-    const assetHistory = this.history.get(address);
+  check(key: string, asset: string): void {
+    const assetHistory = this.history.get(key);
     if (!assetHistory) return;
 
-    const last = assetHistory.get(asset);
-    if (typeof last !== "number") return;
+    const timestamps = assetHistory.get(asset);
+    if (!timestamps || timestamps.length === 0) return;
 
     const now = this.timeFn();
-    const elapsed = now - last;
-    if (elapsed < this.intervalMs) {
-      throw new ThrottleError(asset, this.intervalMs - elapsed);
+    const recent = timestamps.filter((t) => now - t < this.intervalMs);
+
+    if (recent.length >= this.maxCount) {
+      // Retry after the oldest timestamp in the window expires
+      const oldest = Math.min(...recent);
+      throw new ThrottleError(asset, this.intervalMs - (now - oldest));
     }
   }
 
-  record(address: string, asset: string): void {
-    if (!this.history.has(address)) {
-      this.history.set(address, new Map());
+  record(key: string, asset: string): void {
+    if (!this.history.has(key)) {
+      this.history.set(key, new Map());
     }
-    this.history.get(address)!.set(asset, this.timeFn());
+    const assetHistory = this.history.get(key)!;
+    if (!assetHistory.has(asset)) {
+      assetHistory.set(asset, []);
+    }
+    const now = this.timeFn();
+    // Prune expired entries to keep memory bounded, then append
+    const pruned = assetHistory.get(asset)!.filter((t) => now - t < this.intervalMs);
+    pruned.push(now);
+    assetHistory.set(asset, pruned);
   }
 }
