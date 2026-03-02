@@ -22,13 +22,11 @@ type RightPanel =
 const PENDING_LABELS: Record<string, string> = {
   eth: "Sending ETH to Sepolia...",
   "fee-juice": "Bridging Fee Juice to L2...",
-  "test-token": "Minting tokens on L2...",
 };
 
 const PENDING_SUBS: Record<string, string> = {
   eth: "Broadcasting transaction on Sepolia testnet.",
   "fee-juice": "Initiating L1→L2 bridge deposit.",
-  "test-token": "Minting to your public Aztec balance.",
 };
 
 function PendingPanel({ asset }: { asset: string }) {

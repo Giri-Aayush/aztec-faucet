@@ -11,6 +11,11 @@ type StatusData = {
     l1ChainId: number;
     aztecNodeUrl: string;
   };
+  sdk?: {
+    faucetVersion: string;
+    latestDevnetVersion: string | null;
+    outdated: boolean;
+  };
 };
 
 export function NetworkStatus() {
@@ -30,10 +35,8 @@ export function NetworkStatus() {
       .then(setStatus)
       .catch((err) => {
         if (err instanceof DOMException && err.name === "AbortError") {
-          // Distinguish timeout (from our setTimeout) vs cleanup abort (StrictMode unmount)
-          // Timeout fires at exactly 10s; StrictMode abort fires near-instantly
           const elapsed = Date.now() - startedAt;
-          if (elapsed < 9_000) return; // cleanup abort — ignore silently
+          if (elapsed < 9_000) return;
           console.error("Status fetch timed out");
         } else {
           console.error("Status fetch failed:", err);
@@ -67,28 +70,49 @@ export function NetworkStatus() {
   }
 
   return (
-    <div className="mb-4 flex items-center justify-between rounded-xl border border-white/6 px-3 py-2 text-xs text-zinc-500">
-      <div className="flex items-center gap-2">
-        <span className="inline-block h-2 w-2 rounded-full bg-chartreuse" />
-        <span className="text-zinc-400">
-          Chain {status.network.l1ChainId}
-        </span>
-        <span className="text-zinc-700">·</span>
-        <span>Balance: {Number(status.l1BalanceEth).toFixed(4)} ETH</span>
-      </div>
-      <div className="flex gap-1.5">
-        {status.assets.map((a) => (
-          <span
-            key={a.name}
-            className={`rounded-md px-1.5 py-0.5 text-[10px] ${
-              a.available
-                ? "bg-chartreuse/10 text-chartreuse"
-                : "bg-white/4 text-zinc-600"
-            }`}
-          >
-            {a.name === "eth" ? "ETH" : a.name}
+    <div className="space-y-2 mb-4">
+      {/* SDK outdated warning */}
+      {status.sdk?.outdated && (
+        <div className="flex items-start gap-2.5 rounded-xl border border-yellow-500/20 bg-yellow-500/6 px-3 py-2.5 text-xs">
+          <svg viewBox="0 0 16 16" fill="none" className="mt-0.5 h-3.5 w-3.5 shrink-0 text-yellow-400">
+            <path d="M8 2L14 13H2L8 2Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/>
+            <path d="M8 6v4M8 11.5v.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+          </svg>
+          <div>
+            <p className="font-medium text-yellow-400">Faucet SDK out of date</p>
+            <p className="mt-0.5 text-yellow-400/60">
+              Faucet is running <code className="rounded bg-white/6 px-1">{status.sdk.faucetVersion}</code>,
+              latest devnet is <code className="rounded bg-white/6 px-1">{status.sdk.latestDevnetVersion}</code>.
+              CLI commands above use the latest automatically. Faucet functionality may differ until redeployed.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Network status bar */}
+      <div className="flex items-center justify-between rounded-xl border border-white/6 px-3 py-2 text-xs text-zinc-500">
+        <div className="flex items-center gap-2">
+          <span className="inline-block h-2 w-2 rounded-full bg-chartreuse" />
+          <span className="text-zinc-400">
+            Chain {status.network.l1ChainId}
           </span>
-        ))}
+          <span className="text-zinc-700">·</span>
+          <span>Balance: {Number(status.l1BalanceEth).toFixed(4)} ETH</span>
+        </div>
+        <div className="flex gap-1.5">
+          {status.assets.filter((a) => a.name !== "test-token").map((a) => (
+            <span
+              key={a.name}
+              className={`rounded-md px-1.5 py-0.5 text-[10px] ${
+                a.available
+                  ? "bg-chartreuse/10 text-chartreuse"
+                  : "bg-white/4 text-zinc-600"
+              }`}
+            >
+              {a.name === "eth" ? "ETH" : a.name}
+            </span>
+          ))}
+        </div>
       </div>
     </div>
   );

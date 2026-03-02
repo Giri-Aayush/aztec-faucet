@@ -1,0 +1,42 @@
+import { NextResponse } from "next/server";
+import { createAztecNodeClient } from "@aztec/aztec.js/node";
+import { AztecAddress } from "@aztec/aztec.js/addresses";
+import { Fr } from "@aztec/aztec.js/fields";
+import { deriveStorageSlotInMap } from "@aztec/stdlib/hash";
+
+const AZTEC_ADDRESS_RE = /^0x[0-9a-fA-F]{64}$/;
+
+function formatFeeJuice(raw: bigint): string {
+  const str = raw.toString().padStart(19, "0");
+  const intPart = str.slice(0, str.length - 18) || "0";
+  const decPart = str.slice(str.length - 18, str.length - 14);
+  return `${intPart}.${decPart}`;
+}
+
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const address = searchParams.get("address") ?? "";
+
+  if (!AZTEC_ADDRESS_RE.test(address)) {
+    return NextResponse.json({ error: "Invalid Aztec address" }, { status: 400 });
+  }
+
+  try {
+    const nodeUrl = process.env.AZTEC_NODE_URL ?? "https://v4-devnet-2.aztec-labs.com/";
+    const node = createAztecNodeClient(nodeUrl);
+    const owner = AztecAddress.fromString(address);
+    const feeJuiceAddress = AztecAddress.fromBigInt(BigInt(5));
+    const balanceSlot = await deriveStorageSlotInMap(new Fr(1), owner);
+    const balanceField = await node.getPublicStorageAt("latest", feeJuiceAddress, balanceSlot);
+    const balance = balanceField.toBigInt();
+
+    return NextResponse.json({
+      address,
+      balanceRaw: balance.toString(),
+      balanceFormatted: formatFeeJuice(balance),
+    });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : "Unknown error";
+    return NextResponse.json({ error: msg.slice(0, 200) }, { status: 500 });
+  }
+}

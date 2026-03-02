@@ -4,7 +4,7 @@ import { L2Faucet, type FeeJuiceClaimData } from "./l2-faucet";
 import { Throttle, ThrottleError } from "./throttle";
 import { ClaimStore, type StoredClaim } from "./claim-store";
 
-export type Asset = "eth" | "fee-juice" | "test-token";
+export type Asset = "eth" | "fee-juice";
 
 export class AddressValidationError extends Error {
   constructor(message: string) {
@@ -109,14 +109,9 @@ export class FaucetManager {
       l1ChainId,
       l1PrivateKey,
       sponsoredFpcAddress: requireEnv("SPONSORED_FPC_ADDRESS"),
-      tokenContractAddress: process.env.L2_TOKEN_CONTRACT_ADDRESS,
-      tokenDripAmount: process.env.TOKEN_DRIP_AMOUNT
-        ? parseIntEnv("TOKEN_DRIP_AMOUNT", 100)
-        : undefined,
       feeJuiceDripAmount: process.env.FEE_JUICE_DRIP_AMOUNT
         ? parseBigIntEnv("FEE_JUICE_DRIP_AMOUNT")
         : undefined,
-      aztecAccountSecret: process.env.AZTEC_ACCOUNT_SECRET,
     });
 
     const intervalMs = parseIntEnv("DRIP_INTERVAL_MS", 3600000);
@@ -165,11 +160,6 @@ export class FaucetManager {
         };
         break;
       }
-      case "test-token": {
-        const txHash = await this.l2Faucet.mintTestToken(trimmed);
-        result = { success: true, asset, txHash };
-        break;
-      }
       default: {
         const _exhaustive: never = asset;
         throw new Error(`Unknown asset: ${_exhaustive}`);
@@ -211,7 +201,6 @@ export class FaucetManager {
       this.l1Faucet.getBalance(),
       fetchLatestDevnetVersion(),
     ]);
-    const hasTokenContract = !!process.env.L2_TOKEN_CONTRACT_ADDRESS;
 
     return {
       healthy: true,
@@ -220,7 +209,6 @@ export class FaucetManager {
       assets: [
         { name: "eth", available: true },
         { name: "fee-juice", available: true },
-        { name: "test-token", available: hasTokenContract },
       ],
       network: {
         l1ChainId: parseInt(process.env.L1_CHAIN_ID ?? "11155111", 10),

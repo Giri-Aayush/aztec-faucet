@@ -4,8 +4,9 @@ import { useState } from "react";
 import { FaucetLayout } from "@/components/faucet-layout";
 import { NetworkStatus } from "@/components/network-status";
 import { StatusView } from "@/components/status-view";
+import { BalanceView } from "@/components/balance-view";
 
-type View = "faucet" | "status";
+type View = "faucet" | "balance" | "status";
 
 const DiamondIcon = () => (
   <svg viewBox="0 0 32 32" fill="none" className="h-9 w-9 text-chartreuse">
@@ -46,9 +47,41 @@ export default function Home() {
           </p>
         </div>
 
+        {/* Tab bar — only shown for faucet / balance views */}
+        {view !== "status" && (
+          <div className="mx-auto mb-6 max-w-xs">
+            <div className="flex items-center gap-1 rounded-full border border-white/6 bg-white/2 p-1">
+              <button
+                type="button"
+                onClick={() => setView("faucet")}
+                className={`flex-1 rounded-full py-1.5 text-xs font-medium transition-all ${
+                  view === "faucet"
+                    ? "bg-white/10 text-white"
+                    : "text-zinc-500 hover:text-zinc-300"
+                }`}
+              >
+                Faucet
+              </button>
+              <button
+                type="button"
+                onClick={() => setView("balance")}
+                className={`flex-1 rounded-full py-1.5 text-xs font-medium transition-all ${
+                  view === "balance"
+                    ? "bg-white/10 text-white"
+                    : "text-zinc-500 hover:text-zinc-300"
+                }`}
+              >
+                Check Balance
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* View body — keyed so transition fires on every switch */}
         <div key={view} className="animate-panel-state-in">
-          {view === "faucet" ? (
+          {view === "balance" ? (
+            <BalanceView />
+          ) : view === "faucet" ? (
             <>
               {/* Network status bar */}
               <div className="mx-auto max-w-lg">

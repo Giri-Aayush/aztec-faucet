@@ -16,14 +16,12 @@ type StatusData = {
 const ASSET_LABELS: Record<string, string> = {
   eth: "L1 ETH",
   "fee-juice": "Fee Juice",
-  "test-token": "Test Token",
 };
 
 // Default skeleton structure — matches the shape of real data
 const SKELETON_ASSETS = [
   { name: "eth", available: false },
   { name: "fee-juice", available: false },
-  { name: "test-token", available: false },
 ];
 
 function Sk({ w = "w-24", h = "h-3" }: { w?: string; h?: string }) {

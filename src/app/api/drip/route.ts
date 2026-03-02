@@ -7,7 +7,7 @@ import {
 } from "@/lib/faucet-manager";
 import { verifyTurnstileToken } from "@/lib/turnstile";
 
-const VALID_ASSETS: Asset[] = ["eth", "fee-juice", "test-token"];
+const VALID_ASSETS: Asset[] = ["eth", "fee-juice"];
 
 export async function POST(request: Request) {
   let body: unknown;

@@ -16,7 +16,7 @@
 
 set -e
 
-REPO_RAW="https://raw.githubusercontent.com/Giri-Aayush/aztec-faucet/feat/sh-scripts"
+REPO_RAW="https://raw.githubusercontent.com/Giri-Aayush/aztec-faucet/main"
 
 mkdir -p ~/.aztec-devtools
 cd ~/.aztec-devtools
