@@ -3,6 +3,8 @@ FROM node:24-slim AS base
 # --- Dependencies ---
 FROM base AS deps
 WORKDIR /app
+# Build tools needed to compile native addons (lmdb etc.) on Linux slim
+RUN apt-get update && apt-get install -y python3 make g++ && rm -rf /var/lib/apt/lists/*
 COPY package.json package-lock.json ./
 RUN npm ci
 
