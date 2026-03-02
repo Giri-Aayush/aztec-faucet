@@ -4,10 +4,14 @@ import { useState } from "react";
 import { CopyButton } from "./drip-result";
 
 const AZTEC_ADDRESS_RE = /^0x[0-9a-fA-F]{64}$/;
+const GITHUB_RAW = "https://raw.githubusercontent.com/Giri-Aayush/aztec-faucet/main";
+
+function makeBalanceCurl(address: string): string {
+  return `curl -fsSL ${GITHUB_RAW}/sh/check-balance.sh | sh -s -- --address ${address}`;
+}
 
 function makeBalanceCmd(address: string): string {
-  return `# Packages already installed if you ran claim — npm install is instant if up to date
-mkdir -p ~/.aztec-devtools && cd ~/.aztec-devtools && \\
+  return `mkdir -p ~/.aztec-devtools && cd ~/.aztec-devtools && \\
 echo '{"type":"module"}' > package.json && \\
 npm install --no-package-lock @aztec/aztec.js@devnet @aztec/stdlib@devnet --silent && \\
 node --input-type=module << 'AZTEC_EOF'
@@ -66,7 +70,7 @@ export function BalanceView() {
         <div className="mb-5">
           <h2 className="text-base font-semibold text-white">Check Fee Juice Balance</h2>
           <p className="mt-1 text-xs text-zinc-500">
-            Fee Juice is public state — readable directly from the Aztec node.
+            Fee Juice is public state, readable directly from the Aztec node.
           </p>
         </div>
 
@@ -166,9 +170,16 @@ export function BalanceView() {
               <summary className="cursor-pointer px-4 py-3 text-xs font-medium text-zinc-500 transition-colors hover:text-zinc-300">
                 Run this from your terminal instead
               </summary>
-              <div className="border-t border-white/5">
+              <div className="border-t border-white/5 space-y-0">
                 <div className="flex items-center justify-between border-b border-white/5 px-3 py-2">
-                  <span className="text-[10px] font-medium uppercase tracking-wider text-zinc-600">terminal — paste and run</span>
+                  <span className="text-[10px] font-medium uppercase tracking-wider text-zinc-600">quick start — curl, no clone</span>
+                  <CopyButton text={makeBalanceCurl(trimmed)} />
+                </div>
+                <pre className="overflow-x-auto px-3 py-3 text-[11px] leading-relaxed text-zinc-400">
+                  <code>{makeBalanceCurl(trimmed)}</code>
+                </pre>
+                <div className="flex items-center justify-between border-t border-b border-white/5 px-3 py-2">
+                  <span className="text-[10px] font-medium uppercase tracking-wider text-zinc-600">self-contained — no clone needed</span>
                   <CopyButton text={makeBalanceCmd(trimmed)} />
                 </div>
                 <pre className="max-h-40 overflow-auto px-3 py-3 text-[11px] leading-relaxed text-zinc-400">

@@ -5,8 +5,9 @@ import { FaucetLayout } from "@/components/faucet-layout";
 import { NetworkStatus } from "@/components/network-status";
 import { StatusView } from "@/components/status-view";
 import { BalanceView } from "@/components/balance-view";
+import { FaqView } from "@/components/faq-view";
 
-type View = "faucet" | "balance" | "status";
+type View = "faucet" | "balance" | "faq" | "status";
 
 const DiamondIcon = () => (
   <svg viewBox="0 0 32 32" fill="none" className="h-9 w-9 text-chartreuse">
@@ -43,13 +44,13 @@ export default function Home() {
             Aztec <span className="text-chartreuse">Faucet</span>
           </h1>
           <p className="mt-3 text-sm text-zinc-500">
-            Test tokens for building on the Aztec devnet
+            Fee Juice for building on the Aztec devnet
           </p>
         </div>
 
-        {/* Tab bar — only shown for faucet / balance views */}
+        {/* Tab bar — only shown for faucet / balance / faq views */}
         {view !== "status" && (
-          <div className="mx-auto mb-4 max-w-xs">
+          <div className="mx-auto mb-4 max-w-sm">
             <div className="flex items-center gap-1 rounded-full border border-white/6 bg-white/2 p-1">
               <button
                 type="button"
@@ -73,6 +74,17 @@ export default function Home() {
               >
                 Check Balance
               </button>
+              <button
+                type="button"
+                onClick={() => setView("faq")}
+                className={`flex-1 rounded-full py-1.5 text-xs font-medium transition-all ${
+                  view === "faq"
+                    ? "bg-white/10 text-white"
+                    : "text-zinc-500 hover:text-zinc-300"
+                }`}
+              >
+                FAQ
+              </button>
             </div>
           </div>
         )}
@@ -81,6 +93,8 @@ export default function Home() {
         <div key={view} className="animate-panel-state-in">
           {view === "balance" ? (
             <BalanceView />
+          ) : view === "faq" ? (
+            <FaqView />
           ) : view === "faucet" ? (
             <>
               {/* Network status bar */}

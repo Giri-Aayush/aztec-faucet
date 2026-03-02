@@ -14,8 +14,7 @@ export function makeClaimOneLiner(claimAmount: string, claimSecretHex: string, m
 }
 
 export function makeClaimSelfContained(claimAmount: string, claimSecretHex: string, messageLeafIndex: string): string {
-  return `# If you already ran the create-account step, packages are cached — install is instant
-mkdir -p ~/.aztec-devtools && cd ~/.aztec-devtools && \\
+  return `mkdir -p ~/.aztec-devtools && cd ~/.aztec-devtools && \\
 echo '{"type":"module"}' > package.json && \\
 npm install --no-package-lock @aztec/wallets@devnet @aztec/aztec.js@devnet @aztec/stdlib@devnet --silent && \\
 LOG_LEVEL=silent node --input-type=module << 'AZTEC_EOF'

@@ -189,12 +189,18 @@ export function FaucetForm({
             <button
               key={a.value}
               type="button"
+              disabled={locked}
               onClick={() => {
+                if (locked) return;
                 setAsset(a.value);
                 setError(null);
               }}
               className={`rounded-xl border p-3 text-left transition-all ${
-                asset === a.value
+                locked
+                  ? asset === a.value
+                    ? "cursor-not-allowed border-chartreuse/20 bg-chartreuse/4 text-zinc-400"
+                    : "cursor-not-allowed border-white/4 bg-white/1 text-zinc-600"
+                  : asset === a.value
                   ? "border-chartreuse/30 bg-chartreuse/6 text-white"
                   : "border-white/6 bg-white/2 text-zinc-500 hover:border-white/10 hover:text-zinc-300"
               }`}
@@ -261,19 +267,49 @@ export function FaucetForm({
         >
           Recipient Address
         </label>
-        <input
-          id="address"
-          type="text"
-          value={address}
-          onChange={(e) => {
-            setAddress(e.target.value);
-            if (error) setError(null);
-          }}
-          placeholder={placeholder}
-          spellCheck={false}
-          autoComplete="off"
-          className="w-full rounded-xl border border-white/6 bg-white/3 px-4 py-3 font-mono text-sm text-white placeholder-zinc-600 outline-none transition-all focus:border-chartreuse/40 focus:ring-1 focus:ring-chartreuse/20"
-        />
+        <div className="relative">
+          <input
+            id="address"
+            type="text"
+            value={address}
+            onChange={(e) => {
+              if (locked) return;
+              setAddress(e.target.value);
+              if (error) setError(null);
+            }}
+            readOnly={locked}
+            placeholder={placeholder}
+            spellCheck={false}
+            autoComplete="off"
+            className={`w-full rounded-xl border py-3 pl-4 pr-20 font-mono text-sm placeholder-zinc-600 outline-none transition-all ${
+              locked
+                ? "cursor-not-allowed border-white/4 bg-white/2 text-zinc-500 select-none"
+                : "border-white/6 bg-white/3 text-white focus:border-chartreuse/40 focus:ring-1 focus:ring-chartreuse/20"
+            }`}
+          />
+          {!locked && (
+            <button
+              type="button"
+              onClick={async () => {
+                try {
+                  const text = await navigator.clipboard.readText();
+                  setAddress(text.trim());
+                  if (error) setError(null);
+                } catch {
+                  // clipboard permission denied — silently ignore
+                }
+              }}
+              className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1 rounded-lg border border-white/8 bg-white/4 px-2.5 py-1.5 text-[11px] text-zinc-500 transition-all hover:border-chartreuse/30 hover:text-chartreuse"
+              title="Paste from clipboard"
+            >
+              <svg viewBox="0 0 14 14" fill="none" className="h-3 w-3">
+                <rect x="4" y="1" width="8" height="10" rx="1.5" stroke="currentColor" strokeWidth="1.3"/>
+                <path d="M2 4H1.5A1.5 1.5 0 000 5.5v7A1.5 1.5 0 001.5 14H8a1.5 1.5 0 001.5-1.5V12" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
+              </svg>
+              Paste
+            </button>
+          )}
+        </div>
         <p className="mt-1.5 text-xs text-zinc-600">
           {isEthAddress
             ? "Ethereum address (0x + 40 hex chars)"
