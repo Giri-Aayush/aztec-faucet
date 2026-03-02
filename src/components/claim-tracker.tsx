@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { CopyButton, DataField } from "./drip-result";
+import { CopyButton, DataField, makeClaimCmd } from "./drip-result";
 
 type ClaimStatus = "bridging" | "ready" | "expired";
 
@@ -18,27 +18,44 @@ type ClaimResponse = {
   elapsedSeconds: number;
   expiresInSeconds?: number;
   claimData?: ClaimData;
-  sdkSnippet?: string;
 };
 
 const POLL_INTERVAL_MS = 3_000;
 
+function formatElapsed(seconds: number): string {
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return `${m}:${s.toString().padStart(2, "0")}`;
+}
+
+function ResetButton({ onReset }: { onReset: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onReset}
+      className="w-full rounded-xl border border-white/8 px-4 py-2.5 text-sm text-zinc-400 transition-all hover:border-white/15 hover:bg-white/4 hover:text-white"
+    >
+      Request another drip
+    </button>
+  );
+}
+
 export function ClaimTracker({
   claimId,
+  initialClaimData,
   onReset,
 }: {
   claimId: string;
+  initialClaimData?: ClaimData;
   onReset: () => void;
 }) {
   const [status, setStatus] = useState<ClaimStatus>("bridging");
   const [elapsed, setElapsed] = useState(0);
   const [expiresIn, setExpiresIn] = useState<number | null>(null);
-  const [claimData, setClaimData] = useState<ClaimData | null>(null);
-  const [sdkSnippet, setSdkSnippet] = useState<string | null>(null);
+  // Seed claimData from the drip response — available immediately without polling
+  const [claimData, setClaimData] = useState<ClaimData | null>(initialClaimData ?? null);
   const [error, setError] = useState<string | null>(null);
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const startTimeRef = useRef(Date.now());
-  const expiryTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const poll = useCallback(async () => {
     try {
@@ -57,7 +74,6 @@ export function ClaimTracker({
 
       if (data.status === "ready" && data.claimData) {
         setClaimData(data.claimData);
-        setSdkSnippet(data.sdkSnippet ?? null);
         if (data.expiresInSeconds !== undefined) {
           setExpiresIn(data.expiresInSeconds);
         }
@@ -67,219 +83,217 @@ export function ClaimTracker({
     }
   }, [claimId]);
 
-  // Poll the backend
+  // Poll the backend while bridging
   useEffect(() => {
     if (status !== "bridging") return;
-
     poll();
     const interval = setInterval(poll, POLL_INTERVAL_MS);
     return () => clearInterval(interval);
   }, [status, poll]);
 
+  // Local elapsed timer for smooth display
+  useEffect(() => {
+    if (status !== "bridging") return;
+    const interval = setInterval(() => {
+      setElapsed(Math.floor((Date.now() - startTimeRef.current) / 1000));
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [status]);
+
   // Countdown timer once claim is ready
   useEffect(() => {
     if (status !== "ready" || expiresIn === null) return;
-
-    expiryTimerRef.current = setInterval(() => {
+    const interval = setInterval(() => {
       setExpiresIn((prev) => (prev !== null && prev > 0 ? prev - 1 : 0));
     }, 1000);
-
-    return () => {
-      if (expiryTimerRef.current) clearInterval(expiryTimerRef.current);
-    };
+    return () => clearInterval(interval);
   }, [status, expiresIn === null]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Local elapsed timer for smooth display
-  useEffect(() => {
-    if (status !== "bridging") {
-      if (timerRef.current) clearInterval(timerRef.current);
-      return;
-    }
+  const expiryUrgent = expiresIn !== null && expiresIn < 300;
+  const expiryCritical = expiresIn !== null && expiresIn < 60;
 
-    timerRef.current = setInterval(() => {
-      setElapsed(Math.floor((Date.now() - startTimeRef.current) / 1000));
-    }, 1000);
+  // key={statusKey} forces remount → fires animate-panel-state-in on every transition
+  const statusKey = error ? "error" : status;
 
-    return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
-    };
-  }, [status]);
-
-  if (error) {
+  if (error || status === "expired") {
+    const isError = !!error;
     return (
-      <div className="mt-6 rounded-xl border border-red-500/20 bg-red-500/6 p-4">
-        <p className="text-sm font-medium text-red-400">{error}</p>
-        <button
-          type="button"
-          onClick={onReset}
-          className="mt-3 rounded-lg border border-white/8 px-4 py-2 text-sm text-zinc-400 transition-colors hover:bg-white/4 hover:text-white"
-        >
-          Request again
-        </button>
-      </div>
-    );
-  }
+      <div key={statusKey} className="flex h-full flex-col justify-between gap-5 animate-panel-state-in">
+        <div className="space-y-5">
+          <div className="flex items-center gap-2.5">
+            <div className={`flex h-7 w-7 items-center justify-center rounded-full border ${isError ? "border-red-500/30 bg-red-500/10" : "border-orchid/30 bg-orchid/10"}`}>
+              <svg viewBox="0 0 14 14" fill="none" className={`h-3.5 w-3.5 ${isError ? "text-red-400" : "text-orchid"}`}>
+                <path d="M7 2v5M7 10.5v.5" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
+              </svg>
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-white">
+                {isError ? "Bridge Submitted" : "Claim Expired"}
+              </p>
+              <p className="mt-0.5 text-xs text-zinc-500">
+                {isError
+                  ? "The L1 bridge tx was sent. Status tracking failed — use the data below to claim."
+                  : "The L1→L2 message took too long. Please request Fee Juice again."}
+              </p>
+            </div>
+          </div>
 
-  if (status === "expired") {
-    return (
-      <div className="mt-6 rounded-xl border border-orchid/20 bg-orchid/4 p-4">
-        <p className="text-sm font-medium text-orchid">
-          This claim has expired.
-        </p>
-        <p className="mt-1 text-xs text-orchid/60">
-          The L1→L2 message took too long to be included. Please request Fee
-          Juice again.
-        </p>
-        <button
-          type="button"
-          onClick={onReset}
-          className="mt-3 rounded-lg border border-white/8 px-4 py-2 text-sm text-zinc-400 transition-colors hover:bg-white/4 hover:text-white"
-        >
-          Request again
-        </button>
+          {/* Show claim data even when polling fails — seeded from drip response */}
+          {isError && claimData && (
+            <div className="space-y-3">
+              <DataField label="Claim Amount" value={claimData.claimAmount} />
+              <DataField label="Message Leaf Index" value={claimData.messageLeafIndex} />
+              <details>
+                <summary className="cursor-pointer select-none py-1 text-[10px] text-zinc-600 transition-colors hover:text-zinc-400">
+                  Show all claim fields
+                </summary>
+                <div className="mt-2 space-y-2">
+                  <DataField label="Claim Secret" value={claimData.claimSecretHex} />
+                  <DataField label="Claim Secret Hash" value={claimData.claimSecretHashHex} />
+                  <DataField label="Message Hash" value={claimData.messageHashHex} />
+                </div>
+              </details>
+              <div className="rounded-xl border border-white/6 bg-white/2">
+                <div className="flex items-center justify-between border-b border-white/5 px-3 py-2">
+                  <span className="text-[10px] font-medium uppercase tracking-wider text-zinc-600">terminal — paste and run</span>
+                  <CopyButton text={makeClaimCmd(claimData.claimAmount, claimData.claimSecretHex, claimData.messageLeafIndex)} />
+                </div>
+                <pre className="overflow-x-auto px-3 py-3 text-[11px] leading-relaxed text-zinc-400">
+                  <code>{makeClaimCmd(claimData.claimAmount, claimData.claimSecretHex, claimData.messageLeafIndex)}</code>
+                </pre>
+              </div>
+              <p className="text-[11px] text-zinc-600">
+                Replace <code className="rounded bg-white/6 px-1 text-zinc-500">&lt;YOUR_SECRET_KEY&gt;</code> with the secret from the create-account step.
+              </p>
+            </div>
+          )}
+        </div>
+        <ResetButton onReset={onReset} />
       </div>
     );
   }
 
   if (status === "bridging") {
     return (
-      <div className="mt-6 rounded-xl border border-chartreuse/15 bg-chartreuse/4 p-4">
-        <div className="flex items-center gap-3">
-          <div className="relative h-5 w-5">
-            <div className="absolute inset-0 animate-ping rounded-full bg-chartreuse/20" />
-            <div className="relative h-5 w-5 rounded-full border-2 border-chartreuse/50 bg-chartreuse/10" />
+      <div key={statusKey} className="flex h-full flex-col justify-between gap-5 animate-panel-state-in">
+        <div className="space-y-5">
+          {/* Animated indicator */}
+          <div className="flex items-center gap-3.5">
+            <div className="relative h-7 w-7 shrink-0">
+              <div className="absolute inset-0 animate-ping rounded-full bg-chartreuse/20" />
+              <div className="relative flex h-7 w-7 items-center justify-center rounded-full border border-chartreuse/40 bg-chartreuse/10">
+                <div className="h-2 w-2 animate-pulse rounded-full bg-chartreuse" />
+              </div>
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-white">Bridging Fee Juice to L2...</p>
+              <p className="mt-0.5 text-xs text-zinc-500">Initiating L1→L2 bridge deposit.</p>
+            </div>
           </div>
-          <div>
-            <p className="text-sm font-medium text-chartreuse">
-              Bridging Fee Juice from L1 to L2...
-            </p>
-            <p className="mt-0.5 text-xs text-chartreuse/50">
-              Waiting for the L1→L2 message to be picked up by the Aztec
-              sequencer. This usually takes 1-2 minutes.
-            </p>
-          </div>
-        </div>
 
-        <div className="mt-4 flex items-center justify-between rounded-lg bg-white/4 px-3 py-2">
-          <span className="text-xs text-zinc-500">Elapsed</span>
-          <span className="font-mono text-sm text-zinc-300">
-            {formatElapsed(elapsed)}
-          </span>
-        </div>
-
-        <div className="mt-3">
-          <div className="h-1 overflow-hidden rounded-full bg-white/6">
-            <div
-              className="h-full animate-pulse rounded-full bg-chartreuse/40 transition-all duration-1000"
-              style={{ width: `${Math.min((elapsed / 120) * 100, 95)}%` }}
-            />
+          {/* Network row */}
+          <div className="flex items-center gap-2 rounded-lg border border-white/5 bg-white/2 px-3 py-2">
+            <span className="relative flex h-1.5 w-1.5">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-chartreuse/60" style={{ animationDuration: "1.5s" }} />
+              <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-chartreuse" />
+            </span>
+            <span className="text-xs text-zinc-400">Aztec L2 Devnet</span>
           </div>
+
+          {/* Progress bar */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between text-[11px] text-zinc-600">
+              <span>Broadcasting</span>
+              <span className="font-mono">{formatElapsed(elapsed)}</span>
+            </div>
+            <div className="h-1 overflow-hidden rounded-full bg-white/6">
+              <div
+                className="h-full animate-pulse rounded-full bg-chartreuse/40 transition-all duration-1000"
+                style={{ width: `${Math.min((elapsed / 120) * 100, 95)}%` }}
+              />
+            </div>
+          </div>
+
+          <p className="text-xs text-zinc-600">
+            This usually takes 1-2 minutes. Please don&apos;t close this tab.
+          </p>
         </div>
       </div>
     );
   }
 
   // status === "ready"
-  const expiryUrgent = expiresIn !== null && expiresIn < 300;
-  const expiryCritical = expiresIn !== null && expiresIn < 60;
-
   return (
-    <div className="mt-6 space-y-4">
-      <div className="rounded-xl border border-aqua/20 bg-aqua/4 p-4">
-        <p className="text-sm font-medium text-aqua">
-          Fee Juice is ready to claim!
-        </p>
-        <p className="mt-1 text-xs text-aqua/60">
-          The L1→L2 bridge message has been included on L2. Use the data below
-          to claim your Fee Juice. See the SDK snippet for both new account
-          deployment and existing account usage.
-        </p>
-      </div>
-
-      {expiresIn !== null && (
-        <div
-          className={`flex items-center justify-between rounded-lg px-3 py-2 text-xs ${
-            expiryCritical
-              ? "border border-red-500/20 bg-red-500/6 text-red-400"
-              : expiryUrgent
-                ? "border border-orchid/20 bg-orchid/6 text-orchid"
-                : "border border-white/6 bg-white/4 text-zinc-400"
-          }`}
-        >
-          <span>Claim data expires in</span>
-          <span className="font-mono font-medium">
-            {formatElapsed(expiresIn)}
+    <div key={statusKey} className="flex h-full flex-col justify-between gap-5 animate-panel-state-in">
+      <div className="space-y-5">
+        {/* Header row */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <div className="flex h-7 w-7 items-center justify-center rounded-full border border-aqua/30 bg-aqua/10">
+              <svg viewBox="0 0 14 14" fill="none" className="h-3.5 w-3.5 text-aqua">
+                <path d="M2.5 7.5L5.5 10.5L11.5 4" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </div>
+            <span className="text-sm font-semibold text-white">Fee Juice Ready</span>
+          </div>
+          <span className="rounded-full border border-aqua/20 bg-aqua/8 px-2.5 py-0.5 text-[10px] font-medium uppercase tracking-widest text-aqua">
+            Ready to Claim
           </span>
         </div>
-      )}
 
-      {claimData && (
-        <div className="space-y-3 rounded-xl border border-white/6 bg-white/2 p-4">
-          <DataField label="Claim Amount" value={claimData.claimAmount} />
-          <DataField label="Claim Secret" value={claimData.claimSecretHex} />
-          <DataField
-            label="Claim Secret Hash"
-            value={claimData.claimSecretHashHex}
-          />
-          <DataField label="Message Hash" value={claimData.messageHashHex} />
-          <DataField
-            label="Message Leaf Index"
-            value={claimData.messageLeafIndex}
-          />
+        {/* Network row with expiry */}
+        <div className="flex items-center gap-2 rounded-lg border border-white/5 bg-white/2 px-3 py-2">
+          <span className="relative flex h-1.5 w-1.5">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-orchid/60" style={{ animationDuration: "2.5s" }} />
+            <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-orchid" />
+          </span>
+          <span className="text-xs text-zinc-400">Aztec L2 Devnet</span>
+          {expiresIn !== null && (
+            <span className={`ml-auto font-mono text-xs ${expiryCritical ? "text-red-400" : expiryUrgent ? "text-orchid" : "text-zinc-600"}`}>
+              Expires {formatElapsed(expiresIn)}
+            </span>
+          )}
         </div>
-      )}
 
-      {claimData && (
-        <details open>
-          <summary className="cursor-pointer text-xs text-chartreuse/70 transition-colors hover:text-chartreuse">
-            CLI command
-          </summary>
-          <div className="mt-2 rounded-lg border border-white/6 bg-white/4 p-3">
-            <div className="overflow-x-auto">
-              <pre className="text-xs text-zinc-300">{`node scripts/claim-fee-juice.mjs \\
-  --secret <your-account-secret> \\
-  --claim-amount ${claimData.claimAmount} \\
-  --claim-secret ${claimData.claimSecretHex} \\
-  --message-leaf-index ${claimData.messageLeafIndex}`}</pre>
-            </div>
-            <div className="mt-2 flex justify-end">
-              <CopyButton
-                text={`node scripts/claim-fee-juice.mjs \\\n  --secret <your-account-secret> \\\n  --claim-amount ${claimData.claimAmount} \\\n  --claim-secret ${claimData.claimSecretHex} \\\n  --message-leaf-index ${claimData.messageLeafIndex}`}
-              />
-            </div>
+        {/* Claim data fields */}
+        {claimData && (
+          <div className="space-y-2">
+            <DataField label="Claim Amount" value={claimData.claimAmount} />
+            <DataField label="Message Leaf Index" value={claimData.messageLeafIndex} />
+            <details>
+              <summary className="cursor-pointer select-none py-1 text-[10px] text-zinc-600 transition-colors hover:text-zinc-400">
+                Show all claim fields
+              </summary>
+              <div className="mt-2 space-y-2">
+                <DataField label="Claim Secret" value={claimData.claimSecretHex} />
+                <DataField label="Claim Secret Hash" value={claimData.claimSecretHashHex} />
+                <DataField label="Message Hash" value={claimData.messageHashHex} />
+              </div>
+            </details>
           </div>
-        </details>
-      )}
+        )}
 
-      {sdkSnippet && (
-        <details>
-          <summary className="cursor-pointer text-xs text-chartreuse/70 transition-colors hover:text-chartreuse">
-            SDK code snippet
-          </summary>
-          <div className="mt-2 rounded-lg border border-white/6 bg-white/4 p-3">
-            <div className="overflow-x-auto">
-              <pre className="text-xs text-zinc-300">{sdkSnippet}</pre>
+        {/* Paste-and-run terminal command */}
+        {claimData && (
+          <div className="rounded-xl border border-white/6 bg-white/2">
+            <div className="flex items-center justify-between border-b border-white/5 px-3 py-2">
+              <span className="text-[10px] font-medium uppercase tracking-wider text-zinc-600">terminal — paste and run</span>
+              <CopyButton text={makeClaimCmd(claimData.claimAmount, claimData.claimSecretHex, claimData.messageLeafIndex)} />
             </div>
-            <div className="mt-2 flex justify-end">
-              <CopyButton text={sdkSnippet} />
-            </div>
+            <pre className="overflow-x-auto px-3 py-3 text-[11px] leading-relaxed text-zinc-400">
+              <code>{makeClaimCmd(claimData.claimAmount, claimData.claimSecretHex, claimData.messageLeafIndex)}</code>
+            </pre>
           </div>
-        </details>
-      )}
+        )}
+        {claimData && (
+          <p className="text-[11px] text-zinc-600">
+            Replace <code className="rounded bg-white/6 px-1 text-zinc-500">&lt;YOUR_SECRET_KEY&gt;</code> with the secret from the create-account step. Claim data is pre-filled.
+          </p>
+        )}
+      </div>
 
-      <button
-        type="button"
-        onClick={onReset}
-        className="w-full rounded-xl border border-white/8 px-4 py-2 text-sm text-zinc-400 transition-colors hover:bg-white/4 hover:text-white"
-      >
-        Request another drip
-      </button>
+      {/* Reset button pinned to bottom */}
+      <ResetButton onReset={onReset} />
     </div>
   );
-}
-
-function formatElapsed(seconds: number): string {
-  const m = Math.floor(seconds / 60);
-  const s = seconds % 60;
-  return `${m}:${s.toString().padStart(2, "0")}`;
 }

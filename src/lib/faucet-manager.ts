@@ -31,9 +31,57 @@ export type FaucetStatus = {
     l1ChainId: number;
     aztecNodeUrl: string;
   };
+  sdk: {
+    faucetVersion: string;
+    latestDevnetVersion: string | null;
+    outdated: boolean;
+  };
 };
 
-let instance: FaucetManager | null = null;
+// Read the SDK version the faucet was built with
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
+
+const FAUCET_SDK_VERSION: string = (() => {
+  try {
+    const raw = readFileSync(
+      resolve(process.cwd(), "node_modules/@aztec/aztec.js/package.json"),
+      "utf-8",
+    );
+    return (JSON.parse(raw) as { version: string }).version;
+  } catch {
+    return "unknown";
+  }
+})();
+
+// Cache the npm registry lookup — TTL 1 hour
+let _npmVersionCache: { version: string; fetchedAt: number } | null = null;
+
+async function fetchLatestDevnetVersion(): Promise<string | null> {
+  const now = Date.now();
+  if (_npmVersionCache && now - _npmVersionCache.fetchedAt < 3_600_000) {
+    return _npmVersionCache.version;
+  }
+  try {
+    const res = await fetch("https://registry.npmjs.org/@aztec/aztec.js/devnet", {
+      signal: AbortSignal.timeout(5_000),
+    });
+    if (!res.ok) return null;
+    const data = await res.json() as { version: string };
+    _npmVersionCache = { version: data.version, fetchedAt: now };
+    return data.version;
+  } catch {
+    return null;
+  }
+}
+
+// Use globalThis so the singleton survives Next.js HMR module reloads in dev.
+// Without this, each hot-reload resets the module-level variable and the
+// in-memory ClaimStore is wiped — causing GET /api/claim/[id] to 404
+// immediately after a successful POST /api/drip.
+const g = globalThis as typeof globalThis & {
+  _faucetManagerInstance?: FaucetManager;
+};
 
 export class FaucetManager {
   private l1Faucet: L1Faucet;
@@ -81,10 +129,10 @@ export class FaucetManager {
   }
 
   static getInstance(): FaucetManager {
-    if (!instance) {
-      instance = new FaucetManager();
+    if (!g._faucetManagerInstance) {
+      g._faucetManagerInstance = new FaucetManager();
     }
-    return instance;
+    return g._faucetManagerInstance;
   }
 
   async drip(address: string, asset: Asset, ip?: string): Promise<DripResult> {
@@ -111,6 +159,9 @@ export class FaucetManager {
           asset,
           claimId,
           claimStatus: "bridging",
+          // Include claimData in the initial response so the client has it
+          // even if the polling endpoint later fails (e.g., server restart).
+          claimData,
         };
         break;
       }
@@ -156,7 +207,10 @@ export class FaucetManager {
   }
 
   async getStatus(): Promise<FaucetStatus> {
-    const l1Balance = await this.l1Faucet.getBalance();
+    const [l1Balance, latestDevnetVersion] = await Promise.all([
+      this.l1Faucet.getBalance(),
+      fetchLatestDevnetVersion(),
+    ]);
     const hasTokenContract = !!process.env.L2_TOKEN_CONTRACT_ADDRESS;
 
     return {
@@ -171,6 +225,11 @@ export class FaucetManager {
       network: {
         l1ChainId: parseInt(process.env.L1_CHAIN_ID ?? "11155111", 10),
         aztecNodeUrl: process.env.AZTEC_NODE_URL ?? "",
+      },
+      sdk: {
+        faucetVersion: FAUCET_SDK_VERSION,
+        latestDevnetVersion,
+        outdated: latestDevnetVersion !== null && latestDevnetVersion !== FAUCET_SDK_VERSION,
       },
     };
   }

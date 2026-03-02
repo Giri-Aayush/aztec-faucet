@@ -2,6 +2,53 @@
 
 import { useState, useCallback } from "react";
 
+export function makeClaimCmd(claimAmount: string, claimSecretHex: string, messageLeafIndex: string): string {
+  return `cd ~/.aztec-devtools && \\
+npm install --no-package-lock @aztec/wallets@devnet @aztec/aztec.js@devnet && \\
+node --input-type=module << 'AZTEC_EOF'
+process.env.LOG_LEVEL = "silent";
+import { Fr } from "@aztec/aztec.js/fields";
+import { AztecAddress } from "@aztec/aztec.js/addresses";
+import { FeeJuicePaymentMethodWithClaim } from "@aztec/aztec.js/fee";
+const { EmbeddedWallet } = await import("@aztec/wallets/embedded");
+
+const SECRET = "<YOUR_SECRET_KEY>"; // replace with your key from the create-account step
+const nodeUrl = "https://v4-devnet-2.aztec-labs.com/";
+process.stdout.write("Connecting to Aztec devnet... ");
+const w = await EmbeddedWallet.create(nodeUrl, { ephemeral: true, pxeConfig: { proverEnabled: true } });
+console.log("done");
+const mgr = await w.createSchnorrAccount(Fr.fromHexString(SECRET), Fr.ZERO);
+const addr = mgr.address;
+process.stdout.write("Checking account status... ");
+const meta = await w.getContractMetadata(addr);
+console.log(meta.isContractInitialized ? "deployed" : "not yet deployed");
+const claim = {
+  claimAmount: ${claimAmount}n,
+  claimSecret: Fr.fromHexString("${claimSecretHex}"),
+  messageLeafIndex: ${messageLeafIndex}n,
+};
+if (!meta.isContractInitialized) {
+  console.log("Deploying account + claiming Fee Juice atomically (proving ~30s)...");
+  const pm = new FeeJuicePaymentMethodWithClaim(addr, claim);
+  const dm = await mgr.getDeployMethod();
+  const r = await dm.send({ from: AztecAddress.ZERO, fee: { paymentMethod: pm }, wait: { returnReceipt: true } });
+  console.log("Done! Tx:", r.txHash?.toString());
+} else {
+  console.log("Account already deployed — claiming Fee Juice (proving ~30s)...");
+  const wallet = await mgr.getWallet();
+  const pm = new FeeJuicePaymentMethodWithClaim(addr, claim);
+  const r = await wallet.sendTransaction({
+    calls: [],
+    fee: { paymentMethod: pm },
+    wait: { returnReceipt: true },
+  });
+  console.log("Done! Tx:", r.txHash?.toString());
+}
+await w.stop();
+process.exit(0);
+AZTEC_EOF`;
+}
+
 type ClaimData = {
   claimAmount: string;
   claimSecretHex: string;
@@ -290,16 +337,29 @@ export function DripResult({ result, error, retryAfter, onReset }: DripResultPro
             <div className="rounded-lg border border-orchid/15 bg-orchid/4 px-3 py-2.5">
               <p className="text-xs font-medium text-orchid">Action required: Claim on L2</p>
               <p className="mt-1 text-xs text-orchid/60">
-                Use{" "}
-                <code className="rounded bg-white/6 px-1">FeeJuicePaymentMethodWithClaim</code>{" "}
-                from the Aztec SDK.
+                Bridge is complete. Use the script or SDK to claim.
               </p>
             </div>
+
             <DataField label="Claim Amount" value={result.claimData.claimAmount} />
             <DataField label="Claim Secret" value={result.claimData.claimSecretHex} />
             <DataField label="Claim Secret Hash" value={result.claimData.claimSecretHashHex} />
             <DataField label="Message Hash" value={result.claimData.messageHashHex} />
             <DataField label="Message Leaf Index" value={result.claimData.messageLeafIndex} />
+
+            {/* Single paste-and-run claim command */}
+            <div className="rounded-xl border border-white/6 bg-white/2">
+              <div className="flex items-center justify-between border-b border-white/5 px-3 py-2">
+                <span className="text-[10px] font-medium uppercase tracking-wider text-zinc-600">terminal — paste and run</span>
+                <CopyButton text={makeClaimCmd(result.claimData.claimAmount, result.claimData.claimSecretHex, result.claimData.messageLeafIndex)} />
+              </div>
+              <pre className="overflow-x-auto px-3 py-3 text-[11px] leading-relaxed text-zinc-400">
+                <code>{makeClaimCmd(result.claimData.claimAmount, result.claimData.claimSecretHex, result.claimData.messageLeafIndex)}</code>
+              </pre>
+            </div>
+            <p className="text-[11px] text-zinc-600">
+              Replace <code className="rounded bg-white/6 px-1 text-zinc-500">&lt;YOUR_SECRET_KEY&gt;</code> with the secret from the create-account step. Claim data is pre-filled.
+            </p>
           </div>
         )}
       </div>

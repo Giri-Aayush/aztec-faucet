@@ -2,7 +2,26 @@
 
 import { useState, useCallback } from "react";
 import { TurnstileWidget } from "./turnstile-widget";
+import { CopyButton } from "./drip-result";
 import type { DripResultData } from "./drip-result";
+
+const CREATE_ACCOUNT_CMD = `mkdir -p ~/.aztec-devtools && \\
+cd ~/.aztec-devtools && \\
+echo '{"type":"module"}' > package.json && \\
+npm install --no-package-lock @aztec/wallets@devnet @aztec/aztec.js@devnet && \\
+node --input-type=module << 'AZTEC_EOF'
+process.env.LOG_LEVEL = "silent";
+const { EmbeddedWallet } = await import("@aztec/wallets/embedded");
+const { Fr } = await import("@aztec/aztec.js/fields");
+process.stdout.write("Connecting to Aztec devnet... ");
+const w = await EmbeddedWallet.create("https://v4-devnet-2.aztec-labs.com/", { ephemeral: true });
+console.log("done");
+const sk = Fr.random(), a = await w.createSchnorrAccount(sk, Fr.ZERO);
+console.log("\\nSecret Key (KEEP PRIVATE):", sk.toString());
+console.log("Address (paste into faucet):", a.address.toString(), "\\n");
+await w.stop();
+process.exit(0);
+AZTEC_EOF`;
 
 type Asset = "eth" | "fee-juice" | "test-token";
 
@@ -40,6 +59,14 @@ function isValidAztecAddress(addr: string): boolean {
   return /^0x[0-9a-fA-F]{64}$/.test(addr);
 }
 
+type InitialClaimData = {
+  claimAmount: string;
+  claimSecretHex: string;
+  claimSecretHashHex: string;
+  messageHashHex: string;
+  messageLeafIndex: string;
+};
+
 export function FaucetForm({
   onSuccess,
   onClaim,
@@ -48,7 +75,7 @@ export function FaucetForm({
   locked = false,
 }: {
   onSuccess: (data: DripResultData) => void;
-  onClaim: (claimId: string) => void;
+  onClaim: (claimId: string, initialClaimData?: InitialClaimData) => void;
   onPending: (asset: string) => void;
   onError: () => void;
   locked?: boolean;
@@ -136,7 +163,7 @@ export function FaucetForm({
       }
 
       if (data.claimId) {
-        onClaim(data.claimId);
+        onClaim(data.claimId, data.claimData);
       } else {
         onSuccess(data);
       }
@@ -188,20 +215,44 @@ export function FaucetForm({
         </div>
       </div>
 
-      {/* Fee Juice bridging explanation */}
+      {/* Fee Juice helper dropdowns */}
       {asset === "fee-juice" && (
-        <div className="rounded-xl border border-chartreuse/10 bg-chartreuse/4 px-4 py-3">
-          <p className="text-xs font-medium text-chartreuse/80">
-            Why does Fee Juice take 1-2 minutes?
-          </p>
-          <p className="mt-1 text-xs text-chartreuse/40">
-            Fee Juice is Aztec&apos;s L2 gas token. Unlike ETH (sent on L1) or
-            test tokens (minted on L2), Fee Juice must be{" "}
-            <strong className="text-chartreuse/60">bridged from L1 to L2</strong>{" "}
-            through the Fee Juice Portal contract. The Aztec sequencer needs to
-            pick up the L1→L2 message and include it in a block before the
-            funds are available to claim.
-          </p>
+        <div className="space-y-2">
+          <details className="group rounded-xl border border-white/6 bg-white/2">
+            <summary className="cursor-pointer px-4 py-3 text-xs font-medium text-zinc-500 transition-colors hover:text-zinc-300">
+              Don&apos;t have an Aztec address yet?
+            </summary>
+            <div className="border-t border-white/6 px-4 pb-4 pt-3 space-y-3">
+              <p className="text-xs text-zinc-500">
+                Paste this into your terminal. It installs the deps and prints your address — nothing leaves your machine.
+              </p>
+              <div className="rounded-lg border border-white/5 bg-black/30">
+                <div className="flex items-center justify-between border-b border-white/5 px-3 py-2">
+                  <span className="text-[10px] font-medium uppercase tracking-wider text-zinc-600">terminal</span>
+                  <CopyButton text={CREATE_ACCOUNT_CMD} />
+                </div>
+                <pre className="overflow-x-auto px-3 py-3 text-[11px] leading-relaxed text-zinc-400">
+                  <code>{CREATE_ACCOUNT_CMD}</code>
+                </pre>
+              </div>
+            </div>
+          </details>
+
+          <details className="group rounded-xl border border-chartreuse/10 bg-chartreuse/4">
+            <summary className="cursor-pointer px-4 py-3 text-xs font-medium text-chartreuse/80 transition-colors hover:text-chartreuse">
+              Why does Fee Juice take 1-2 minutes?
+            </summary>
+            <div className="border-t border-chartreuse/10 px-4 pb-4 pt-3">
+              <p className="text-xs text-chartreuse/40">
+                Fee Juice is Aztec&apos;s L2 gas token. Unlike ETH (sent on L1) or
+                test tokens (minted on L2), Fee Juice must be{" "}
+                <strong className="text-chartreuse/60">bridged from L1 to L2</strong>{" "}
+                through the Fee Juice Portal contract. The Aztec sequencer needs to
+                pick up the L1→L2 message and include it in a block before the
+                funds are available to claim.
+              </p>
+            </div>
+          </details>
         </div>
       )}
 

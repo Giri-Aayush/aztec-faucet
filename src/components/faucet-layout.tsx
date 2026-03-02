@@ -5,10 +5,18 @@ import { FaucetForm } from "./faucet-form";
 import { DripResult, type DripResultData } from "./drip-result";
 import { ClaimTracker } from "./claim-tracker";
 
+type InitialClaimData = {
+  claimAmount: string;
+  claimSecretHex: string;
+  claimSecretHashHex: string;
+  messageHashHex: string;
+  messageLeafIndex: string;
+};
+
 type RightPanel =
   | { kind: "pending"; asset: string }
   | { kind: "result"; data: DripResultData }
-  | { kind: "claim"; claimId: string }
+  | { kind: "claim"; claimId: string; initialClaimData?: InitialClaimData }
   | null;
 
 const PENDING_LABELS: Record<string, string> = {
@@ -89,8 +97,8 @@ export function FaucetLayout() {
     setRightPanel({ kind: "result", data });
   };
 
-  const handleClaim = (claimId: string) => {
-    setRightPanel({ kind: "claim", claimId });
+  const handleClaim = (claimId: string, initialClaimData?: InitialClaimData) => {
+    setRightPanel({ kind: "claim", claimId, initialClaimData });
   };
 
   const handleError = () => {
@@ -142,6 +150,7 @@ export function FaucetLayout() {
                 ) : (
                   <ClaimTracker
                     claimId={rightPanel.claimId}
+                    initialClaimData={rightPanel.initialClaimData}
                     onReset={handleReset}
                   />
                 )}
