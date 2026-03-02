@@ -152,7 +152,7 @@ export function StatusView({ onBack }: { onBack: () => void }) {
           Assets
         </div>
         <div className="rounded-xl border border-white/5 bg-white/2 px-4">
-          {assets.map((a) => (
+          {assets.filter((a) => a.name !== "test-token").map((a) => (
             <Row key={a.name} label={ASSET_LABELS[a.name] ?? a.name}>
               {loading ? (
                 <Sk w="w-20" h="h-5" />

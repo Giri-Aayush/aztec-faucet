@@ -31,12 +31,12 @@ export default function Home() {
   const [view, setView] = useState<View>("faucet");
 
   return (
-    <main className="bg-atmosphere flex min-h-screen flex-col items-center justify-center px-4 py-16">
+    <main className="bg-atmosphere flex min-h-screen flex-col items-center px-4 pt-10 pb-12">
       <div className="relative z-10 w-full">
 
         {/* Header — static, never re-renders */}
-        <div className="mx-auto mb-10 max-w-lg text-center animate-fade-up">
-          <div className="mb-5 flex justify-center">
+        <div className="mx-auto mb-6 max-w-lg text-center animate-fade-up">
+          <div className="mb-3 flex justify-center">
             <DiamondIcon />
           </div>
           <h1 className="font-display text-5xl text-white">
@@ -49,7 +49,7 @@ export default function Home() {
 
         {/* Tab bar — only shown for faucet / balance views */}
         {view !== "status" && (
-          <div className="mx-auto mb-6 max-w-xs">
+          <div className="mx-auto mb-4 max-w-xs">
             <div className="flex items-center gap-1 rounded-full border border-white/6 bg-white/2 p-1">
               <button
                 type="button"
@@ -89,40 +89,22 @@ export default function Home() {
               </div>
 
               {/* Split-panel faucet form */}
-              <div className="mt-4">
+              <div className="mt-2">
                 <FaucetLayout />
               </div>
 
               {/* Footer */}
-              <div className="mx-auto mt-8 max-w-lg space-y-3">
+              <div className="mx-auto mt-5 max-w-lg space-y-3">
                 <details className="group glass-card rounded-xl">
                   <summary className="cursor-pointer px-4 py-3 text-sm font-medium text-zinc-400 transition-colors hover:text-white">
                     How does this work?
                   </summary>
                   <div className="space-y-2 border-t border-white/6 px-4 py-3 text-xs text-zinc-500">
                     <p>
-                      <strong className="text-zinc-300">L1 ETH:</strong> Sent directly
-                      to your Ethereum address on the configured L1 chain. Used for L1
-                      gas fees.
+                      <strong className="text-zinc-300">ETH —</strong> Sent directly to your Ethereum address on Sepolia. Use it to pay L1 gas fees.
                     </p>
                     <p>
-                      <strong className="text-zinc-300">Fee Juice:</strong> Aztec&apos;s
-                      L2 gas token — required to pay for every transaction on Aztec. It
-                      must be{" "}
-                      <strong className="text-zinc-300">bridged from L1 to L2</strong>{" "}
-                      through the Fee Juice Portal contract. After bridging, the Aztec
-                      sequencer picks up the L1→L2 message (usually within 1-2 minutes)
-                      and you receive claim data. Use that data with{" "}
-                      <code className="rounded bg-white/6 px-1 font-mono">
-                        FeeJuicePaymentMethodWithClaim
-                      </code>{" "}
-                      when deploying your account, or claim directly if your account is
-                      already deployed.
-                    </p>
-                    <p>
-                      <strong className="text-zinc-300">Test Token:</strong> An ERC20
-                      token minted directly on Aztec L2 to your public balance. Useful
-                      for testing transfers and contract interactions.
+                      <strong className="text-zinc-300">Fee Juice —</strong> Aztec&apos;s L2 gas token. Required for every transaction on Aztec. The faucet bridges it from L1 via the Fee Juice Portal — the Aztec sequencer relays the message to L2 in 1-2 minutes. You&apos;ll receive claim data to use when deploying your account.
                     </p>
                   </div>
                 </details>

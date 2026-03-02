@@ -178,13 +178,13 @@ export function FaucetForm({
     : "0x09a4df73aa47f82531a038d1d51abfc85b27665c4b7ca751e2d4fa9f19caffb2";
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-4">
       {/* Asset selector */}
       <div>
         <label className="mb-2 block text-[11px] font-medium uppercase tracking-wider text-zinc-500">
           Select Token
         </label>
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-2 gap-2">
           {ASSETS.map((a) => (
             <button
               key={a.value}
@@ -245,13 +245,8 @@ export function FaucetForm({
               Why does Fee Juice take 1-2 minutes?
             </summary>
             <div className="border-t border-chartreuse/10 px-4 pb-4 pt-3">
-              <p className="text-xs text-chartreuse/40">
-                Fee Juice is Aztec&apos;s L2 gas token. Unlike ETH (sent on L1) or
-                test tokens (minted on L2), Fee Juice must be{" "}
-                <strong className="text-chartreuse/60">bridged from L1 to L2</strong>{" "}
-                through the Fee Juice Portal contract. The Aztec sequencer needs to
-                pick up the L1→L2 message and include it in a block before the
-                funds are available to claim.
+              <p className="text-xs text-chartreuse/50">
+                Fee Juice must be <strong className="text-chartreuse/70">bridged from L1 to L2</strong> — the faucet sends an L1 transaction to the Fee Juice Portal contract, then the Aztec sequencer picks up that message and includes it in an L2 block. That relay step takes 1-2 minutes. Once ready, you&apos;ll get claim data to use when deploying your account.
               </p>
             </div>
           </details>
