@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import React from "react";
 import { FaucetForm } from "./faucet-form";
 import { DripResult, type DripResultData } from "./drip-result";
 import { ClaimTracker } from "./claim-tracker";
@@ -85,7 +86,7 @@ function PendingPanel({ asset }: { asset: string }) {
   );
 }
 
-export function FaucetLayout() {
+export function FaucetLayout({ footer }: { footer?: React.ReactNode }) {
   const [rightPanel, setRightPanel] = useState<RightPanel>(null);
 
   const handlePending = (asset: string) => {
@@ -134,8 +135,8 @@ export function FaucetLayout() {
 
         {/* Right panel — same size as left, slides in */}
         {isSplit && (
-          <div className="w-[28rem] shrink-0 animate-slide-in-right">
-            <div className="glass-card flex h-full flex-col rounded-2xl p-6">
+          <div className="w-[28rem] min-h-0 shrink-0 animate-slide-in-right">
+            <div className="glass-card flex max-h-[calc(100vh-18rem)] flex-col overflow-y-auto rounded-2xl p-6">
               <div key={rightPanel.kind} className="flex h-full flex-col animate-panel-state-in">
                 {rightPanel.kind === "pending" ? (
                   <PendingPanel asset={rightPanel.asset} />
@@ -161,6 +162,9 @@ export function FaucetLayout() {
           </div>
         )}
       </div>
+
+      {/* Footer — hidden when split to keep page height in check */}
+      {!isSplit && footer}
     </div>
   );
 }

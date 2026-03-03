@@ -242,7 +242,7 @@ export function ClaimTracker({
           </span>
           <span className="text-xs text-zinc-400">Aztec L2 Devnet</span>
           {expiresIn !== null && (
-            <span className={`ml-auto font-mono text-xs ${expiryCritical ? "text-red-400" : expiryUrgent ? "text-orchid" : "text-zinc-600"}`}>
+            <span className={`ml-auto font-mono text-xs ${expiryCritical ? "text-red-400 font-semibold" : expiryUrgent ? "text-red-400" : "text-red-400"}`}>
               Expires {formatElapsed(expiresIn)}
             </span>
           )}

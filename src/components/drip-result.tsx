@@ -82,7 +82,7 @@ export function ClaimCommands({ claimAmount, claimSecretHex, messageLeafIndex }:
           <span className="text-[10px] font-medium uppercase tracking-wider text-zinc-600">self-contained — no clone needed</span>
           <CopyButton text={selfContained} />
         </div>
-        <pre className="overflow-x-auto px-3 py-3 text-[11px] leading-relaxed text-zinc-400">
+        <pre className="max-h-48 overflow-x-auto overflow-y-auto px-3 py-3 text-[11px] leading-relaxed text-zinc-400">
           <code>{selfContained}</code>
         </pre>
       </div>

@@ -27,6 +27,34 @@ body {
   color: var(--foreground);
 }
 
+/* Dark scrollbars — prevent white native scrollbars from jarring the dark UI */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+*::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
 /* Atmospheric background with radial glows */
 .bg-atmosphere {
   position: relative;

@@ -178,7 +178,7 @@ Sent directly to your Ethereum address. Use this to pay for L1 transactions and 
 Fee Juice is Aztec's native gas token. Unlike ETH, it **cannot be minted on L2** — it must be bridged from L1 through the Fee Juice Portal contract. The faucet handles the bridge on your behalf and returns everything you need to claim.
 
 ```
-10 Fee Juice · once per 24 hours · per address
+1000 Fee Juice · once per 24 hours · per address
 ```
 
 When the bridge is ready (~1–2 min), you receive:
@@ -190,6 +190,8 @@ When the bridge is ready (~1–2 min), you receive:
 | `messageLeafIndex` | Index of the L1→L2 message in the tree |
 
 The faucet UI pre-fills all of these values into the claim command — you only substitute your secret key.
+
+![Fee Juice claim data ready](./images/fee-juice-complete.png)
 
 ---
 
@@ -228,6 +230,8 @@ Faucet calls bridgeTokensPublic() on the L1 Fee Juice Portal
 ```
 
 The claim data is valid for **30 minutes**. After that, request again.
+
+![Bridging Fee Juice to L2](./images/bridging.png)
 
 ---
 

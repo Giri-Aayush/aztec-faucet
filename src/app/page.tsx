@@ -102,57 +102,58 @@ export default function Home() {
                 <NetworkStatus />
               </div>
 
-              {/* Split-panel faucet form */}
+              {/* Split-panel faucet form + footer (footer hidden when split) */}
               <div className="mt-2">
-                <FaucetLayout />
-              </div>
+                <FaucetLayout
+                  footer={
+                    <div className="mx-auto mt-5 max-w-lg space-y-3">
+                      <details className="group glass-card rounded-xl">
+                        <summary className="cursor-pointer px-4 py-3 text-sm font-medium text-zinc-400 transition-colors hover:text-white">
+                          How does this work?
+                        </summary>
+                        <div className="space-y-2 border-t border-white/6 px-4 py-3 text-xs text-zinc-500">
+                          <p>
+                            <strong className="text-zinc-300">ETH —</strong> Sent directly to your Ethereum address on Sepolia. Use it to pay L1 gas fees.
+                          </p>
+                          <p>
+                            <strong className="text-zinc-300">Fee Juice —</strong> Aztec&apos;s L2 gas token. Required for every transaction on Aztec. The faucet bridges it from L1 via the Fee Juice Portal — the Aztec sequencer relays the message to L2 in 1-2 minutes. You&apos;ll receive claim data to use when deploying your account.
+                          </p>
+                        </div>
+                      </details>
 
-              {/* Footer */}
-              <div className="mx-auto mt-5 max-w-lg space-y-3">
-                <details className="group glass-card rounded-xl">
-                  <summary className="cursor-pointer px-4 py-3 text-sm font-medium text-zinc-400 transition-colors hover:text-white">
-                    How does this work?
-                  </summary>
-                  <div className="space-y-2 border-t border-white/6 px-4 py-3 text-xs text-zinc-500">
-                    <p>
-                      <strong className="text-zinc-300">ETH —</strong> Sent directly to your Ethereum address on Sepolia. Use it to pay L1 gas fees.
-                    </p>
-                    <p>
-                      <strong className="text-zinc-300">Fee Juice —</strong> Aztec&apos;s L2 gas token. Required for every transaction on Aztec. The faucet bridges it from L1 via the Fee Juice Portal — the Aztec sequencer relays the message to L2 in 1-2 minutes. You&apos;ll receive claim data to use when deploying your account.
-                    </p>
-                  </div>
-                </details>
-
-                <div className="text-center text-xs text-zinc-600">
-                  <p>Rate limited to one request per token per 24 hours.</p>
-                  <p className="mt-1">
-                    <a
-                      href="https://docs.aztec.network"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-chartreuse/60 transition-colors hover:text-chartreuse"
-                    >
-                      Aztec Documentation
-                    </a>
-                    {" · "}
-                    <a
-                      href="https://docs.aztec.network/guides/getting_started"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-chartreuse/60 transition-colors hover:text-chartreuse"
-                    >
-                      Getting Started
-                    </a>
-                    {" · "}
-                    <button
-                      type="button"
-                      onClick={() => setView("status")}
-                      className="text-chartreuse/60 transition-colors hover:text-chartreuse"
-                    >
-                      API Status
-                    </button>
-                  </p>
-                </div>
+                      <div className="text-center text-xs text-zinc-600">
+                        <p>Rate limited to one request per token per 24 hours.</p>
+                        <p className="mt-1">
+                          <a
+                            href="https://docs.aztec.network"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-chartreuse/60 transition-colors hover:text-chartreuse"
+                          >
+                            Aztec Documentation
+                          </a>
+                          {" · "}
+                          <a
+                            href="https://docs.aztec.network/guides/getting_started"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-chartreuse/60 transition-colors hover:text-chartreuse"
+                          >
+                            Getting Started
+                          </a>
+                          {" · "}
+                          <button
+                            type="button"
+                            onClick={() => setView("status")}
+                            className="text-chartreuse/60 transition-colors hover:text-chartreuse"
+                          >
+                            API Status
+                          </button>
+                        </p>
+                      </div>
+                    </div>
+                  }
+                />
               </div>
             </>
           ) : (
