@@ -248,7 +248,7 @@ export function ClaimTracker({
               <svg viewBox="0 0 14 14" fill="none" className="h-3 w-3 shrink-0">
                 <path d="M6 2H2.5A.5.5 0 002 2.5v9a.5.5 0 00.5.5h9a.5.5 0 00.5-.5V8M8.5 2H12v3.5M12 2L6.5 7.5" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
-              View L1 bridge tx on Sepolia Etherscan
+              View L1 bridge transaction on Sepolia
             </a>
           )}
         </div>
@@ -344,7 +344,7 @@ export function ClaimTracker({
           <svg viewBox="0 0 14 14" fill="none" className="h-3 w-3 shrink-0">
             <path d="M6 2H2.5A.5.5 0 002 2.5v9a.5.5 0 00.5.5h9a.5.5 0 00.5-.5V8M8.5 2H12v3.5M12 2L6.5 7.5" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
-          View L1 bridge tx on Sepolia Etherscan
+          View L1 bridge transaction on Sepolia
         </a>
       )}
 
