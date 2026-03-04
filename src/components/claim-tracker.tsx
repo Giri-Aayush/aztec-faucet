@@ -55,6 +55,7 @@ export function ClaimTracker({
   // Seed claimData from the drip response — available immediately without polling
   const [claimData, setClaimData] = useState<ClaimData | null>(initialClaimData ?? null);
   const [error, setError] = useState<string | null>(null);
+  const [showAllFields, setShowAllFields] = useState(false);
   const startTimeRef = useRef(Date.now());
 
   const poll = useCallback(async () => {
@@ -118,7 +119,7 @@ export function ClaimTracker({
   if (error || status === "expired") {
     const isError = !!error;
     return (
-      <div key={statusKey} className="flex h-full flex-col justify-between gap-5 animate-panel-state-in">
+      <div key={statusKey} className="flex flex-col gap-5 animate-panel-state-in">
         <div className="space-y-5">
           <div className="flex items-center gap-2.5">
             <div className={`flex h-7 w-7 items-center justify-center rounded-full border ${isError ? "border-red-500/30 bg-red-500/10" : "border-orchid/30 bg-orchid/10"}`}>
@@ -143,16 +144,34 @@ export function ClaimTracker({
             <div className="space-y-3">
               <DataField label="Claim Amount" value={claimData.claimAmount} />
               <DataField label="Message Leaf Index" value={claimData.messageLeafIndex} />
-              <details>
-                <summary className="cursor-pointer select-none py-1 text-[10px] text-zinc-600 transition-colors hover:text-zinc-400">
-                  Show all claim fields
-                </summary>
-                <div className="mt-2 space-y-2">
-                  <DataField label="Claim Secret" value={claimData.claimSecretHex} />
-                  <DataField label="Claim Secret Hash" value={claimData.claimSecretHashHex} />
-                  <DataField label="Message Hash" value={claimData.messageHashHex} />
+              <div className="rounded-xl border border-white/6 bg-white/2 overflow-hidden">
+                <button
+                  type="button"
+                  onClick={() => setShowAllFields((v) => !v)}
+                  className="flex w-full items-center justify-between px-3 py-2 text-left"
+                >
+                  <span className="text-[10px] font-medium text-zinc-500 transition-colors hover:text-zinc-300">
+                    Show all claim fields
+                  </span>
+                  <span className={`shrink-0 text-zinc-600 transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${showAllFields ? "rotate-45" : ""}`}>
+                    <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3">
+                      <path d="M8 3v10M3 8h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                    </svg>
+                  </span>
+                </button>
+                <div
+                  className="grid transition-[grid-template-rows] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]"
+                  style={{ gridTemplateRows: showAllFields ? "1fr" : "0fr" }}
+                >
+                  <div className="overflow-hidden min-h-0">
+                    <div className="border-t border-white/6 px-3 pb-3 pt-2 space-y-2">
+                      <DataField label="Claim Secret" value={claimData.claimSecretHex} />
+                      <DataField label="Claim Secret Hash" value={claimData.claimSecretHashHex} />
+                      <DataField label="Message Hash" value={claimData.messageHashHex} />
+                    </div>
+                  </div>
                 </div>
-              </details>
+              </div>
               <ClaimCommands
                 claimAmount={claimData.claimAmount}
                 claimSecretHex={claimData.claimSecretHex}
@@ -168,7 +187,7 @@ export function ClaimTracker({
 
   if (status === "bridging") {
     return (
-      <div key={statusKey} className="flex h-full flex-col justify-between gap-5 animate-panel-state-in">
+      <div key={statusKey} className="flex flex-col gap-5 animate-panel-state-in">
         <div className="space-y-5">
           {/* Animated indicator */}
           <div className="flex items-center gap-3.5">
@@ -217,7 +236,7 @@ export function ClaimTracker({
 
   // status === "ready"
   return (
-    <div key={statusKey} className="flex h-full flex-col justify-between gap-5 animate-panel-state-in">
+    <div key={statusKey} className="flex flex-col gap-5 animate-panel-state-in">
       <div className="space-y-5">
         {/* Header row */}
         <div className="flex items-center justify-between">
@@ -253,16 +272,34 @@ export function ClaimTracker({
           <div className="space-y-2">
             <DataField label="Claim Amount" value={claimData.claimAmount} />
             <DataField label="Message Leaf Index" value={claimData.messageLeafIndex} />
-            <details>
-              <summary className="cursor-pointer select-none py-1 text-[10px] text-zinc-600 transition-colors hover:text-zinc-400">
-                Show all claim fields
-              </summary>
-              <div className="mt-2 space-y-2">
-                <DataField label="Claim Secret" value={claimData.claimSecretHex} />
-                <DataField label="Claim Secret Hash" value={claimData.claimSecretHashHex} />
-                <DataField label="Message Hash" value={claimData.messageHashHex} />
+            <div className="rounded-xl border border-white/6 bg-white/2 overflow-hidden">
+              <button
+                type="button"
+                onClick={() => setShowAllFields((v) => !v)}
+                className="flex w-full items-center justify-between px-3 py-2 text-left"
+              >
+                <span className="text-[10px] font-medium text-zinc-500 transition-colors hover:text-zinc-300">
+                  Show all claim fields
+                </span>
+                <span className={`shrink-0 text-zinc-600 transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${showAllFields ? "rotate-45" : ""}`}>
+                  <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3">
+                    <path d="M8 3v10M3 8h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                  </svg>
+                </span>
+              </button>
+              <div
+                className="grid transition-[grid-template-rows] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]"
+                style={{ gridTemplateRows: showAllFields ? "1fr" : "0fr" }}
+              >
+                <div className="overflow-hidden min-h-0">
+                  <div className="border-t border-white/6 px-3 pb-3 pt-2 space-y-2">
+                    <DataField label="Claim Secret" value={claimData.claimSecretHex} />
+                    <DataField label="Claim Secret Hash" value={claimData.claimSecretHashHex} />
+                    <DataField label="Message Hash" value={claimData.messageHashHex} />
+                  </div>
+                </div>
               </div>
-            </details>
+            </div>
           </div>
         )}
 

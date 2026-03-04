@@ -203,8 +203,9 @@ function ResetButton({ onReset }: { onReset: () => void }) {
 }
 
 function EthResult({ txHash, onReset }: { txHash: string; onReset?: () => void }) {
+  const [showFullHash, setShowFullHash] = useState(false);
   return (
-    <div className="flex h-full flex-col justify-between gap-5">
+    <div className="flex flex-col gap-5">
       <ConfettiBurst />
       {/* Top section */}
       <div className="space-y-5">
@@ -245,14 +246,30 @@ function EthResult({ txHash, onReset }: { txHash: string; onReset?: () => void }
             <code className="block font-mono text-sm text-zinc-200">
               {truncateHash(txHash)}
             </code>
-            <details className="mt-1.5">
-              <summary className="cursor-pointer select-none text-[10px] text-zinc-600 transition-colors hover:text-zinc-400">
+            <div className="mt-1.5">
+              <button
+                type="button"
+                onClick={() => setShowFullHash((v) => !v)}
+                className="flex items-center gap-1.5 text-[10px] text-zinc-600 transition-colors hover:text-zinc-400"
+              >
+                <span className={`transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${showFullHash ? "rotate-45" : ""}`}>
+                  <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3">
+                    <path d="M8 3v10M3 8h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                  </svg>
+                </span>
                 Show full hash
-              </summary>
-              <code className="mt-1.5 block break-all text-[11px] leading-relaxed text-zinc-500">
-                {txHash}
-              </code>
-            </details>
+              </button>
+              <div
+                className="grid transition-[grid-template-rows] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]"
+                style={{ gridTemplateRows: showFullHash ? "1fr" : "0fr" }}
+              >
+                <div className="overflow-hidden">
+                  <code className="mt-1.5 block break-all text-[11px] leading-relaxed text-zinc-500">
+                    {txHash}
+                  </code>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -303,7 +320,7 @@ export function DripResult({ result, error, retryAfter, onReset }: DripResultPro
   const assetLabel = ASSET_LABELS[result.asset] ?? result.asset;
 
   return (
-    <div className="flex h-full flex-col justify-between gap-5">
+    <div className="flex flex-col gap-5">
       <div className="space-y-5">
         <div className="flex items-center gap-2.5">
           <div className="flex h-7 w-7 items-center justify-center rounded-full border border-aqua/30 bg-aqua/10">

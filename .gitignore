@@ -46,6 +46,9 @@ yarn-error.log*
 # aztec docs research
 aztec-packages/
 
+# local research notes
+WALLET-INTEGRATION-RESEARCH.md
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

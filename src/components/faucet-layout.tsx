@@ -117,7 +117,7 @@ export function FaucetLayout({ footer }: { footer?: React.ReactNode }) {
         isSplit ? "max-w-[58rem]" : "max-w-[32rem]"
       }`}
     >
-      <div className="flex items-stretch gap-5">
+      <div className="flex items-start gap-5">
         {/* Left panel — always visible */}
         <div
           className={`glass-card rounded-2xl p-6 transition-[width] duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ${
@@ -133,11 +133,11 @@ export function FaucetLayout({ footer }: { footer?: React.ReactNode }) {
           />
         </div>
 
-        {/* Right panel — same size as left, slides in */}
+        {/* Right panel — slides in */}
         {isSplit && (
-          <div className="w-[28rem] min-h-0 shrink-0 animate-slide-in-right">
-            <div className="glass-card flex max-h-[calc(100vh-18rem)] flex-col overflow-y-auto rounded-2xl p-6">
-              <div key={rightPanel.kind} className="flex h-full flex-col animate-panel-state-in">
+          <div className={`w-[28rem] min-h-0 shrink-0 animate-slide-in-right ${rightPanel.kind === "pending" ? "self-stretch" : "self-start"}`}>
+            <div className={`glass-card rounded-2xl p-6 ${rightPanel.kind === "pending" ? "flex flex-col h-full overflow-x-hidden" : ""}`}>
+              <div key={rightPanel.kind} className="flex flex-col animate-panel-state-in">
                 {rightPanel.kind === "pending" ? (
                   <PendingPanel asset={rightPanel.asset} />
                 ) : rightPanel.kind === "result" ? (

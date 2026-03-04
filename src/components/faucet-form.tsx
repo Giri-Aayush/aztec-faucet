@@ -79,6 +79,9 @@ export function FaucetForm({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [retryAfter, setRetryAfter] = useState<number | null>(null);
+  const [openAccordion, setOpenAccordion] = useState<"address" | "timing" | null>(null);
+  const toggleAccordion = (name: "address" | "timing") =>
+    setOpenAccordion((prev) => (prev === name ? null : name));
 
   const currentAsset = ASSETS.find((a) => a.value === asset)!;
   const isEthAddress = currentAsset.addressType === "ethereum";
@@ -217,45 +220,83 @@ export function FaucetForm({
       {/* Fee Juice helper dropdowns */}
       {asset === "fee-juice" && (
         <div className="space-y-2">
-          <details className="group rounded-xl border border-white/6 bg-white/2">
-            <summary className="cursor-pointer px-4 py-3 text-xs font-medium text-zinc-500 transition-colors hover:text-zinc-300">
-              Don&apos;t have an Aztec address yet?
-            </summary>
-            <div className="border-t border-white/6 px-4 pb-4 pt-3 space-y-2">
-              <p className="text-xs text-zinc-500">
-                Prints your secret key and address — nothing leaves your machine.
-              </p>
-              <div className="rounded-lg border border-white/5 bg-black/30">
-                <div className="flex items-center justify-between border-b border-white/5 px-3 py-2">
-                  <span className="text-[10px] font-medium uppercase tracking-wider text-zinc-600">quick start — curl, no clone</span>
-                  <CopyButton text={CREATE_ACCOUNT_ONELINER} />
+          {/* Don't have an Aztec address accordion */}
+          <div className="rounded-xl border border-white/6 bg-white/2 overflow-hidden">
+            <button
+              type="button"
+              onClick={() => toggleAccordion("address")}
+              className="flex w-full items-center justify-between px-4 py-3 text-left"
+            >
+              <span className="text-xs font-medium text-zinc-500 transition-colors hover:text-zinc-300">
+                Don&apos;t have an Aztec address yet?
+              </span>
+              <span className={`shrink-0 text-zinc-600 transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${openAccordion === "address" ? "rotate-45" : ""}`}>
+                <svg viewBox="0 0 16 16" fill="none" className="h-3.5 w-3.5">
+                  <path d="M8 3v10M3 8h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                </svg>
+              </span>
+            </button>
+            <div
+              className="grid transition-[grid-template-rows] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]"
+              style={{ gridTemplateRows: openAccordion === "address" ? "1fr" : "0fr" }}
+            >
+              <div className="overflow-hidden">
+                <div className="border-t border-white/6 px-4 pb-4 pt-3 space-y-2">
+                  <p className="text-xs text-zinc-500">
+                    Prints your secret key and address — nothing leaves your machine.
+                  </p>
+                  <div className="rounded-lg border border-white/5 bg-black/30">
+                    <div className="flex items-center justify-between border-b border-white/5 px-3 py-2">
+                      <span className="text-[10px] font-medium uppercase tracking-wider text-zinc-600">quick start — curl, no clone</span>
+                      <CopyButton text={CREATE_ACCOUNT_ONELINER} />
+                    </div>
+                    <pre className="overflow-x-auto px-3 py-3 text-[11px] leading-relaxed text-zinc-400">
+                      <code>{CREATE_ACCOUNT_ONELINER}</code>
+                    </pre>
+                  </div>
+                  <div className="rounded-lg border border-white/5 bg-black/30">
+                    <div className="flex items-center justify-between border-b border-white/5 px-3 py-2">
+                      <span className="text-[10px] font-medium uppercase tracking-wider text-zinc-600">self-contained — no clone needed</span>
+                      <CopyButton text={CREATE_ACCOUNT_SELF_CONTAINED} />
+                    </div>
+                    <pre className="overflow-x-auto px-3 py-3 text-[11px] leading-relaxed text-zinc-400">
+                      <code>{CREATE_ACCOUNT_SELF_CONTAINED}</code>
+                    </pre>
+                  </div>
                 </div>
-                <pre className="overflow-x-auto px-3 py-3 text-[11px] leading-relaxed text-zinc-400">
-                  <code>{CREATE_ACCOUNT_ONELINER}</code>
-                </pre>
-              </div>
-              <div className="rounded-lg border border-white/5 bg-black/30">
-                <div className="flex items-center justify-between border-b border-white/5 px-3 py-2">
-                  <span className="text-[10px] font-medium uppercase tracking-wider text-zinc-600">self-contained — no clone needed</span>
-                  <CopyButton text={CREATE_ACCOUNT_SELF_CONTAINED} />
-                </div>
-                <pre className="overflow-x-auto px-3 py-3 text-[11px] leading-relaxed text-zinc-400">
-                  <code>{CREATE_ACCOUNT_SELF_CONTAINED}</code>
-                </pre>
               </div>
             </div>
-          </details>
+          </div>
 
-          <details className="group rounded-xl border border-chartreuse/10 bg-chartreuse/4">
-            <summary className="cursor-pointer px-4 py-3 text-xs font-medium text-chartreuse/80 transition-colors hover:text-chartreuse">
-              Why does Fee Juice take 1-2 minutes?
-            </summary>
-            <div className="border-t border-chartreuse/10 px-4 pb-4 pt-3">
-              <p className="text-xs text-chartreuse/50">
-                Fee Juice must be <strong className="text-chartreuse/70">bridged from L1 to L2</strong> — the faucet sends an L1 transaction to the Fee Juice Portal contract, then the Aztec sequencer picks up that message and includes it in an L2 block. That relay step takes 1-2 minutes. Once ready, you&apos;ll get claim data to use when deploying your account.
-              </p>
+          {/* Why Fee Juice takes 1-2 minutes accordion */}
+          <div className="rounded-xl border border-chartreuse/10 bg-chartreuse/4 overflow-hidden">
+            <button
+              type="button"
+              onClick={() => toggleAccordion("timing")}
+              className="flex w-full items-center justify-between px-4 py-3 text-left"
+            >
+              <span className="text-xs font-medium text-chartreuse/80 transition-colors hover:text-chartreuse">
+                Why does Fee Juice take 1-2 minutes?
+              </span>
+              <span className={`shrink-0 text-chartreuse/60 transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${openAccordion === "timing" ? "rotate-45" : ""}`}>
+                <svg viewBox="0 0 16 16" fill="none" className="h-3.5 w-3.5">
+                  <path d="M8 3v10M3 8h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                </svg>
+              </span>
+            </button>
+            <div
+              className="grid transition-[grid-template-rows] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]"
+              style={{ gridTemplateRows: openAccordion === "timing" ? "1fr" : "0fr" }}
+            >
+              <div className="overflow-hidden">
+                <div className="border-t border-chartreuse/10 px-4 pb-4 pt-3">
+                  <p className="text-xs text-chartreuse/50">
+                    Fee Juice must be <strong className="text-chartreuse/70">bridged from L1 to L2</strong> — the faucet sends an L1 transaction to the Fee Juice Portal contract, then the Aztec sequencer picks up that message and includes it in an L2 block. That relay step takes 1-2 minutes. Once ready, you&apos;ll get claim data to use when deploying your account.
+                  </p>
+                </div>
+              </div>
             </div>
-          </details>
+          </div>
         </div>
       )}
 
