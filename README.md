@@ -292,4 +292,8 @@ The faucet has four tabs:
 
 [Aztec Documentation](https://docs.aztec.network) · [Getting Started on Devnet](https://docs.aztec.network/developers/getting_started_on_devnet) · [aztec.js SDK](https://docs.aztec.network/developers/docs/aztec-js)
 
+---
+
+Built by [Giri-Aayush](https://github.com/Giri-Aayush) · [MIT License](./LICENSE)
+
 </div>
