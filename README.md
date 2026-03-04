@@ -257,7 +257,7 @@ Faucet calls bridgeTokensPublic() on the L1 Fee Juice Portal
          Claim data is ready - use it to claim on L2
 ```
 
-The faucet's claim tracker keeps your claim data for **30 minutes**. After that the tracker shows "Expired" and stops serving the data — request again to get a fresh set.
+The faucet's claim tracker keeps your claim data for **30 minutes**. After that the tracker shows "Expired" and stops serving the data - request again to get a fresh set.
 
 ![Bridging Fee Juice to L2](./images/bridging.png)
 
@@ -275,88 +275,16 @@ The faucet's claim tracker keeps your claim data for **30 minutes**. After that 
 
 ---
 
-## API
+## UI tabs
 
-Three public endpoints are available – useful for scripts, CI, and tooling.
+The faucet has four tabs:
 
-### `GET /api/status`
-
-Faucet health, balances, and SDK version.
-
-```bash
-curl https://<your-faucet-url>/api/status
-```
-
-```json
-{
-  "healthy": true,
-  "faucetAddress": "0xAbC...123",
-  "l1BalanceEth": "1.23",
-  "assets": [
-    { "name": "eth", "available": true },
-    { "name": "fee-juice", "available": true }
-  ],
-  "network": {
-    "l1ChainId": 11155111,
-    "aztecNodeUrl": "https://..."
-  },
-  "sdk": {
-    "faucetVersion": "4.0.0-devnet.2-patch.4",
-    "latestDevnetVersion": "4.0.0-devnet.2-patch.4",
-    "outdated": false
-  }
-}
-```
-
-### `GET /api/fees`
-
-Current minimum fee rates from the devnet node. Refreshes on every request.
-
-```bash
-curl https://<your-faucet-url>/api/fees
-```
-
-```json
-{
-  "feePerDaGas": "0",
-  "feePerL2Gas": "10000000",
-  "blockNumber": 30651
-}
-```
-
-Values are in base units (18 decimals). `feePerDaGas` is currently `0` on devnet (DA is free).
-
-### `GET /api/node-info`
-
-Live node metadata and all deployed protocol contract addresses.
-
-```bash
-curl https://<your-faucet-url>/api/node-info
-```
-
-```json
-{
-  "nodeVersion": "4.0.0-devnet.2-patch.4",
-  "l1ChainId": 11155111,
-  "rollupVersion": 1,
-  "blockNumber": 30651,
-  "l1Contracts": {
-    "rollupAddress": "0x...",
-    "registryAddress": "0x...",
-    "inboxAddress": "0x...",
-    "outboxAddress": "0x...",
-    "feeJuiceAddress": "0x...",
-    "feeJuicePortalAddress": "0x...",
-    "stakingAssetAddress": "0x..."
-  },
-  "l2Contracts": {
-    "feeJuice": "0x00...05",
-    "instanceRegistry": "0x00...02",
-    "classRegistry": "0x00...03",
-    "multiCallEntrypoint": "0x00...04"
-  }
-}
-```
+| Tab | What it does |
+|-----|-------------|
+| **Faucet** | Request ETH (Sepolia) or Fee Juice. Shows a live claim tracker with pre-filled CLI and SDK snippets once the bridge is ready. |
+| **Balance** | Check the Fee Juice balance of any Aztec address directly from the node. |
+| **Network** | Live fee rates, node health, and all L1/L2 protocol contract addresses. Auto-refreshes every 15 seconds. |
+| **FAQ** | Common questions about the bridge, mana, claim expiry, rate limits, and more. |
 
 ---
 
