@@ -3,8 +3,8 @@ import { Fr } from "@aztec/aztec.js/fields";
 import { getSchnorrAccountContractAddress } from "@aztec/accounts/schnorr";
 import { Throttle, ThrottleError } from "@/lib/throttle";
 
-// 10 keypair generations per hour per IP
-const keygenThrottle = new Throttle(3_600_000, 10);
+// 10 keypair generations per 24 hours per IP
+const keygenThrottle = new Throttle(86_400_000, 10);
 
 export async function GET(request: Request) {
   const forwarded = request.headers.get("x-forwarded-for");

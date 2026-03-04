@@ -218,7 +218,7 @@ export function KeygenView() {
             <path d="M8 7v4M8 5.5v.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
           </svg>
           <span>
-            Keypair generated server-side using cryptographically secure randomness. Not sent to any third party, not stored, not logged. The address is derived locally on the server from your secret key using the Schnorr account contract. No network call to the Aztec node is needed.
+            Keypair generated server-side using cryptographically secure randomness. Not sent to any third party, not stored, not logged. The address is derived locally on the server from your secret key using the Schnorr account contract. No network call to the Aztec node is needed. Rate limited to 10 keypairs per 24 hours per IP.
           </span>
         </div>
       </div>
