@@ -181,6 +181,8 @@ Fee Juice is Aztec's native gas token. Unlike ETH, it **cannot be minted on L2**
 1000 Fee Juice · once per 24 hours · per address
 ```
 
+Immediately after the drip, the UI shows a **Sepolia Etherscan link** for the L1 bridge transaction so you can verify it landed on-chain before the bridge window opens.
+
 When the bridge is ready (~1–2 min), you receive:
 
 | Field | Description |
@@ -192,6 +194,19 @@ When the bridge is ready (~1–2 min), you receive:
 The faucet UI pre-fills all of these values into the claim command – you only substitute your secret key.
 
 ![Fee Juice claim data ready](./images/fee-juice-complete.png)
+
+---
+
+## Account tab
+
+The faucet UI includes an **Account** tab that generates a throwaway Aztec keypair directly in the browser. No CLI, no wallet extension, and no account deployment required.
+
+- Click **Generate Keypair** to get a fresh secret key and its corresponding Aztec address.
+- The address is derived from the secret key using the Schnorr account contract (the same contract used by `aztec-wallet`). No network call to the Aztec node is made.
+- Paste the address straight into the Faucet tab to request Fee Juice.
+- Once you have saved your secret key, click **I've saved my keys** to clear it from view. The address remains visible so you can still copy it.
+
+Keys are generated server-side using cryptographically secure randomness (`Fr.random()` from the Aztec SDK). They are not stored, not logged, and not sent to any third party.
 
 ---
 
@@ -277,11 +292,12 @@ The faucet's claim tracker keeps your claim data for **30 minutes**. After that 
 
 ## UI tabs
 
-The faucet has four tabs:
+The faucet has five tabs:
 
 | Tab | What it does |
 |-----|-------------|
-| **Faucet** | Request ETH (Sepolia) or Fee Juice. Shows a live claim tracker with pre-filled CLI and SDK snippets once the bridge is ready. |
+| **Faucet** | Request ETH (Sepolia) or Fee Juice. After a Fee Juice drip, shows a clickable Sepolia Etherscan link for the L1 bridge tx and a live claim tracker with pre-filled CLI and SDK snippets once the bridge is ready. |
+| **Account** | Generate a throwaway Aztec keypair (secret key + address) in the browser. No CLI, no wallet, no deployment needed. Keys are generated server-side using cryptographically secure randomness and never stored or logged. |
 | **Balance** | Check the Fee Juice balance of any Aztec address directly from the node. |
 | **Network** | Live fee rates, node health, and all L1/L2 protocol contract addresses. Auto-refreshes every 15 seconds. |
 | **FAQ** | Common questions about the bridge, mana, claim expiry, rate limits, and more. |
