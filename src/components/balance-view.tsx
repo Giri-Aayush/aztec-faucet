@@ -80,21 +80,33 @@ export function BalanceView() {
             <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-wider text-zinc-500">
               Aztec Address
             </label>
-            <input
-              type="text"
-              value={address}
-              onChange={(e) => { setAddress(e.target.value); setResult(null); setError(null); }}
-              onKeyDown={(e) => { if (e.key === "Enter") handleCheck(); }}
-              placeholder="0x + 64 hex characters"
-              spellCheck={false}
-              className={`w-full rounded-xl border bg-white/3 px-4 py-3 font-mono text-sm text-white placeholder-zinc-600 outline-none transition-colors focus:bg-white/5 ${
-                isDirty && !isValid
-                  ? "border-red-500/40 focus:border-red-500/60"
-                  : isValid
-                    ? "border-chartreuse/30 focus:border-chartreuse/50"
-                    : "border-white/8 focus:border-white/20"
-              }`}
-            />
+            <div className="relative">
+              <input
+                type="text"
+                value={address}
+                onChange={(e) => { setAddress(e.target.value); setResult(null); setError(null); }}
+                onKeyDown={(e) => { if (e.key === "Enter") handleCheck(); }}
+                placeholder="0x + 64 hex characters"
+                spellCheck={false}
+                className={`w-full rounded-xl border bg-white/3 py-3 pl-4 pr-16 font-mono text-sm text-white placeholder-zinc-600 outline-none transition-colors focus:bg-white/5 ${
+                  isDirty && !isValid
+                    ? "border-red-500/40 focus:border-red-500/60"
+                    : isValid
+                      ? "border-chartreuse/30 focus:border-chartreuse/50"
+                      : "border-white/8 focus:border-white/20"
+                }`}
+              />
+              <button
+                type="button"
+                onClick={async () => {
+                  const text = await navigator.clipboard.readText().catch(() => "");
+                  if (text) { setAddress(text.trim()); setResult(null); setError(null); }
+                }}
+                className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg border border-white/8 px-2.5 py-1 text-[11px] text-zinc-500 transition-colors hover:border-chartreuse/25 hover:text-chartreuse"
+              >
+                Paste
+              </button>
+            </div>
             {isDirty && !isValid && (
               <p className="mt-1.5 text-[11px] text-red-400">
                 Must be 0x followed by exactly 64 hex characters.
@@ -152,7 +164,7 @@ export function BalanceView() {
 
               {isZero && (
                 <p className="mt-2 text-xs text-zinc-600">
-                  Zero balance — if you just bridged, wait ~2 min for the L1→L2 message to land.
+                  Zero balance. If you just bridged, wait ~2 min for the L1 to L2 message to land.
                 </p>
               )}
 

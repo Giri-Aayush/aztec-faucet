@@ -8,8 +8,9 @@ import { BalanceView } from "@/components/balance-view";
 import { FaqView } from "@/components/faq-view";
 import { NetworkView } from "@/components/network-view";
 import { KeygenView } from "@/components/keygen-view";
+import { DonateView } from "@/components/donate-view";
 
-type View = "faucet" | "balance" | "faq" | "status" | "network" | "keys";
+type View = "faucet" | "balance" | "faq" | "status" | "network" | "keys" | "donate";
 
 const DiamondIcon = () => (
   <svg viewBox="0 0 32 32" fill="none" className="h-9 w-9 text-chartreuse">
@@ -120,6 +121,17 @@ export default function Home() {
               >
                 FAQ
               </button>
+              <button
+                type="button"
+                onClick={() => switchTab("donate")}
+                className={`flex-1 rounded-full py-1.5 text-xs font-medium transition-all ${
+                  view === "donate"
+                    ? "bg-white/10 text-white"
+                    : "text-zinc-500 hover:text-zinc-300"
+                }`}
+              >
+                Donate
+              </button>
             </div>
           </div>
         )}
@@ -226,6 +238,8 @@ export default function Home() {
               <FaqView />
             ) : (leaving ?? view) === "network" ? (
               <NetworkView />
+            ) : (leaving ?? view) === "donate" ? (
+              <DonateView />
             ) : (
               <StatusView onBack={() => switchTab("faucet")} />
             )}
