@@ -69,7 +69,7 @@ export default function Home() {
               <button
                 type="button"
                 onClick={() => switchTab("faucet")}
-                className={`flex-1 rounded-full py-1.5 text-xs font-medium transition-all ${
+                className={`flex-1 rounded-full py-1.5 text-[10px] sm:text-xs font-medium transition-all ${
                   view === "faucet"
                     ? "bg-white/10 text-white"
                     : "text-zinc-500 hover:text-zinc-300"
@@ -80,7 +80,7 @@ export default function Home() {
               <button
                 type="button"
                 onClick={() => switchTab("balance")}
-                className={`flex-1 rounded-full py-1.5 text-xs font-medium transition-all ${
+                className={`flex-1 rounded-full py-1.5 text-[10px] sm:text-xs font-medium transition-all ${
                   view === "balance"
                     ? "bg-white/10 text-white"
                     : "text-zinc-500 hover:text-zinc-300"
@@ -91,7 +91,7 @@ export default function Home() {
               <button
                 type="button"
                 onClick={() => switchTab("keys")}
-                className={`flex-1 rounded-full py-1.5 text-xs font-medium transition-all ${
+                className={`flex-1 rounded-full py-1.5 text-[10px] sm:text-xs font-medium transition-all ${
                   view === "keys"
                     ? "bg-white/10 text-white"
                     : "text-zinc-500 hover:text-zinc-300"
@@ -102,7 +102,7 @@ export default function Home() {
               <button
                 type="button"
                 onClick={() => switchTab("network")}
-                className={`flex-1 rounded-full py-1.5 text-xs font-medium transition-all ${
+                className={`flex-1 rounded-full py-1.5 text-[10px] sm:text-xs font-medium transition-all ${
                   view === "network"
                     ? "bg-white/10 text-white"
                     : "text-zinc-500 hover:text-zinc-300"
@@ -113,7 +113,7 @@ export default function Home() {
               <button
                 type="button"
                 onClick={() => switchTab("faq")}
-                className={`flex-1 rounded-full py-1.5 text-xs font-medium transition-all ${
+                className={`flex-1 rounded-full py-1.5 text-[10px] sm:text-xs font-medium transition-all ${
                   view === "faq"
                     ? "bg-white/10 text-white"
                     : "text-zinc-500 hover:text-zinc-300"
@@ -124,7 +124,7 @@ export default function Home() {
               <button
                 type="button"
                 onClick={() => switchTab("donate")}
-                className={`flex-1 rounded-full py-1.5 text-xs font-medium transition-all ${
+                className={`flex-1 rounded-full py-1.5 text-[10px] sm:text-xs font-medium transition-all ${
                   view === "donate"
                     ? "bg-white/10 text-white"
                     : "text-zinc-500 hover:text-zinc-300"
