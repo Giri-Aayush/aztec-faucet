@@ -215,10 +215,14 @@ export function FaucetForm({
               className={`rounded-xl border p-3 text-left transition-all ${
                 locked
                   ? asset === a.value
-                    ? "cursor-not-allowed border-chartreuse/20 bg-chartreuse/4 text-zinc-400"
+                    ? a.value === "eth"
+                      ? "cursor-not-allowed border-blue-400/20 bg-blue-400/4 text-zinc-400"
+                      : "cursor-not-allowed border-chartreuse/20 bg-chartreuse/4 text-zinc-400"
                     : "cursor-not-allowed border-white/4 bg-white/1 text-zinc-600"
                   : asset === a.value
-                  ? "border-chartreuse/30 bg-chartreuse/6 text-white"
+                  ? a.value === "eth"
+                    ? "border-blue-400/40 bg-blue-400/8 text-white"
+                    : "border-chartreuse/30 bg-chartreuse/6 text-white"
                   : "border-white/6 bg-white/2 text-zinc-500 hover:border-white/10 hover:text-zinc-300"
               }`}
             >
