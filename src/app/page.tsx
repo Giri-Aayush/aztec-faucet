@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { FaucetLayout } from "@/components/faucet-layout";
 import { NetworkStatus } from "@/components/network-status";
 import { StatusView } from "@/components/status-view";
@@ -12,24 +13,6 @@ import { DonateView } from "@/components/donate-view";
 
 type View = "faucet" | "balance" | "faq" | "status" | "network" | "keys" | "donate";
 
-const DiamondIcon = () => (
-  <svg viewBox="0 0 32 32" fill="none" className="h-9 w-9 text-chartreuse">
-    <path
-      d="M16 2L28 16L16 30L4 16L16 2Z"
-      stroke="currentColor"
-      strokeWidth="1.5"
-      fill="currentColor"
-      fillOpacity="0.08"
-    />
-    <path
-      d="M16 8L22 16L16 24L10 16L16 8Z"
-      stroke="currentColor"
-      strokeWidth="1"
-      fill="currentColor"
-      fillOpacity="0.15"
-    />
-  </svg>
-);
 
 export default function Home() {
   const [view, setView] = useState<View>("faucet");
@@ -52,7 +35,7 @@ export default function Home() {
         {/* Header — static, never re-renders */}
         <div className="mx-auto mb-6 max-w-lg text-center animate-fade-up">
           <div className="mb-3 flex justify-center">
-            <DiamondIcon />
+            <Image src="/aztec-symbol.svg" alt="Aztec" width={44} height={44} className="rounded-lg" />
           </div>
           <h1 className="font-display text-5xl text-white">
             Aztec <span className="text-chartreuse">Faucet</span>

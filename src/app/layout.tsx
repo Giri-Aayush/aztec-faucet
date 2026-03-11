@@ -34,6 +34,7 @@ export default function RootLayout({
     <html lang="en" className="dark">
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${instrumentSerif.variable} antialiased overflow-x-hidden min-h-screen flex flex-col`}
+        suppressHydrationWarning
       >
         {children}
         <footer className="flex flex-col items-center gap-2 pb-8 pt-4">
