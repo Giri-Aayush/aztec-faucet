@@ -4,7 +4,7 @@ import { useState } from "react";
 import { CopyButton } from "./drip-result";
 
 const AZTEC_ADDRESS_RE = /^0x[0-9a-fA-F]{64}$/;
-const GITHUB_RAW = "https://raw.githubusercontent.com/NethermindEth/aztec-faucet/main";
+const GITHUB_RAW = `https://raw.githubusercontent.com/NethermindEth/aztec-faucet/${process.env.NEXT_PUBLIC_GITHUB_BRANCH ?? "main"}`;
 
 function makeBalanceCurl(address: string): string {
   return `curl -fsSL ${GITHUB_RAW}/sh/check-balance.sh | sh -s -- --address ${address}`;

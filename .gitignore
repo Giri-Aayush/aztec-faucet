@@ -51,6 +51,7 @@ aztec-packages/
 # local research notes
 WALLET-INTEGRATION-RESEARCH.md
 WORKFLOW.md
+VERSION-BUMP.md
 
 # typescript
 *.tsbuildinfo

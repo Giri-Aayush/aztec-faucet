@@ -25,4 +25,5 @@ jobs:
       ignore_trivy: true
       context: .
       dockerfile_path: ./Dockerfile
+      docker_build_args: "NEXT_PUBLIC_GITHUB_BRANCH=dev"
       push: ${{ github.event_name != 'pull_request' }}

@@ -4,7 +4,7 @@ import { useState, useCallback } from "react";
 import { ConfettiBurst } from "./confetti-burst";
 
 const GITHUB_REPO = "https://github.com/NethermindEth/aztec-faucet";
-const GITHUB_RAW = "https://raw.githubusercontent.com/NethermindEth/aztec-faucet/main";
+const GITHUB_RAW = `https://raw.githubusercontent.com/NethermindEth/aztec-faucet/${process.env.NEXT_PUBLIC_GITHUB_BRANCH ?? "main"}`;
 
 export function makeClaimOneLiner(claimAmount: string, claimSecretHex: string, messageLeafIndex: string): string {
   return `curl -fsSL ${GITHUB_RAW}/sh/claim.sh | sh -s -- \\
