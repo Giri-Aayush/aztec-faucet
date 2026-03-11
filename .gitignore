@@ -50,6 +50,7 @@ aztec-packages/
 
 # local research notes
 WALLET-INTEGRATION-RESEARCH.md
+WORKFLOW.md
 
 # typescript
 *.tsbuildinfo
