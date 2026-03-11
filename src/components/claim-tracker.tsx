@@ -73,8 +73,13 @@ export function ClaimTracker({
       const res = await fetch(url);
       if (!res.ok) {
         if (res.status === 404) {
-          setError("Claim not found. It may have expired.");
-          setStatus("expired");
+          // If we have the L1 tx hash the bridge confirmed on-chain — keep polling
+          // silently rather than showing an error. The claim may be on a different
+          // server instance; it will resolve on the next poll cycle.
+          if (!l1TxHash) {
+            setError("Claim not found. It may have expired.");
+            setStatus("expired");
+          }
         }
         return;
       }
