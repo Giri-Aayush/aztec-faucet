@@ -1,3 +1,8 @@
+> [\!WARNING]
+> **This repository has been archived.** All development after this point has moved to [NethermindEth/aztec-faucet](https://github.com/NethermindEth/aztec-faucet/tree/main).
+
+---
+
 <div align="center">
 
 <br />
